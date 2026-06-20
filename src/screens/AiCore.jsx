@@ -9,7 +9,7 @@ export default function AiCore({ setCurrentScreen, currentScreen, gameState }) {
   return (
     <>
 <div className="crt-overlay"></div>
-<div className="scanline-anim"></div>
+<div className="scanline"></div>
 <div className="flex flex-col h-screen p-gutter gap-gutter flicker-layer">
 {/*  Header / TopAppBar  */}
 <header className="w-full flex justify-between items-center py-unit terminal-border border-b-2 border-terminal-green bg-surface px-gutter shrink-0">
