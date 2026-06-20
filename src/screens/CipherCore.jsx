@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import SystemSidebar from '../components/SystemSidebar';
+import AiTerminal from '../components/AiTerminal';
 
 export default function CipherCore({ setCurrentScreen, currentScreen, gameState }) {
   useEffect(() => {
@@ -132,23 +133,8 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState 
 </section>
 {/*  Right Panel: AI Terminal & Turing Portrait  */}
 <aside className="hidden lg:flex flex-col w-80 gap-gutter">
-{/*  AI Terminal (Gemini)  */}
-<div className="flex-1 bg-panel-gray border-2 border-terminal-green flex flex-col overflow-hidden">
-<div className="bg-terminal-green text-surface px-2 py-1 font-headline-md text-xs uppercase">AI_TERMINAL_GMNI</div>
-<div className="flex-1 p-4 font-body-md text-terminal-green overflow-y-auto flex flex-col gap-4">
-<div className="typing-text">
-<span className="text-solstice-gold font-bold">&gt; </span>
-<span>Alan Turing's contributions to cryptography at Bletchley Park changed the course of history. His work on the Enigma machine wasn't just math; it was a race against time.</span>
-</div>
-<div className="typing-text bg-surface p-2 border border-terminal-green border-dashed">
-<span className="text-soft-green font-bold">HINT:</span>
-<span>Caesar Ciphers are simplistic. Shift each character back by 3 positions to find the core message. 'K' becomes 'H'. 'H' becomes 'E'. Do you see the pattern?</span>
-</div>
-<div className="mt-auto flex items-center gap-2 border-t border-terminal-green pt-2">
-<span className="text-terminal-green animate-pulse">_</span>
-<input className="bg-transparent border-none focus:ring-0 text-terminal-green w-full" placeholder="Query Gemini..." type="text"/>
-</div>
-</div>
+<div className="terminal-border bg-panel-gray flex-1 flex flex-col overflow-hidden">
+<AiTerminal />
 </div>
 {/*  Portrait Fragment (50%)  */}
 <div className="h-64 bg-surface border-2 border-terminal-green relative overflow-hidden flex items-center justify-center">

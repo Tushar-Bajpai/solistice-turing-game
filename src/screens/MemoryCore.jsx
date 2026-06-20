@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import SystemSidebar from '../components/SystemSidebar';
+import AiTerminal from '../components/AiTerminal';
 
 export default function MemoryCore({ setCurrentScreen, currentScreen, gameState }) {
   useEffect(() => {
@@ -140,49 +141,8 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState 
 </section>
 {/*  Right AI Terminal (Gemini)  */}
 <aside className="w-80 flex flex-col gap-4">
-<div className="pixel-border bg-panel-gray flex-1 flex flex-col overflow-hidden">
-{/*  AI Header  */}
-<div className="p-3 bg-surface-container-high border-b-2 border-terminal-green flex justify-between items-center">
-<div className="flex items-center gap-2">
-<span className="material-symbols-outlined text-[18px] text-terminal-green">terminal</span>
-<span className="font-headline-md text-[12px] text-terminal-green">AI_ASSISTANT_GEMINI</span>
-</div>
-<div className="flex gap-1">
-<div className="w-2 h-2 bg-terminal-green rounded-full animate-pulse"></div>
-</div>
-</div>
-{/*  Chat History  */}
-<div className="flex-1 p-4 overflow-y-auto terminal-scroll font-body-md text-soft-green flex flex-col gap-4">
-<div className="flex flex-col gap-1">
-<div className="flex gap-2">
-<span className="text-terminal-green font-bold">SYSTEM:</span>
-<span className="opacity-80">Memory Core Module_02 online. Corruption preventing state persistence.</span>
-</div>
-</div>
-<div className="flex flex-col gap-1">
-<div className="flex gap-2">
-<span className="text-solstice-gold font-bold">GEMINI:</span>
-<span className="typing-text">Greetings, operator. A Flip-Flop is a basic storage element. In this configuration, each '1' in the sequence flips the state, while '0' maintains the current value. Observe the sequence carefully...</span>
-</div>
-</div>
-<div className="flex flex-col gap-1 mt-2">
-<div className="flex gap-2 text-terminal-green">
-<span className="font-bold">&gt;</span>
-<span>Explain state flip logic.</span>
-</div>
-</div>
-</div>
-{/*  AI Actions  */}
-<div className="p-2 border-t border-terminal-green/30 grid grid-cols-2 gap-2">
-<button className="pixel-border border-terminal-green/50 text-terminal-green font-label-caps py-2 text-[12px] hover:bg-terminal-green hover:text-black">HINT</button>
-<button className="pixel-border border-terminal-green/50 text-terminal-green font-label-caps py-2 text-[12px] hover:bg-terminal-green hover:text-black">EXPLAIN XOR</button>
-</div>
-{/*  Input Area  */}
-<div className="p-3 bg-black flex items-center gap-2">
-<span className="text-terminal-green font-bold text-[20px]">&gt;</span>
-<input className="bg-transparent border-none outline-none text-terminal-green w-full font-body-md p-0 focus:ring-0" placeholder="Type command..." type="text"/>
-<div className="cursor"></div>
-</div>
+<div className="terminal-border bg-panel-gray flex-1 flex flex-col overflow-hidden">
+<AiTerminal />
 </div>
 {/*  Asset Preview / Identity Frame  */}
 <div className="pixel-border h-48 bg-panel-gray overflow-hidden relative">

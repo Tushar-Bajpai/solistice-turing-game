@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import SystemSidebar from '../components/SystemSidebar';
+import AiTerminal from '../components/AiTerminal';
 
 export default function AiCore({ setCurrentScreen, currentScreen, gameState }) {
   useEffect(() => {
@@ -131,37 +132,8 @@ export default function AiCore({ setCurrentScreen, currentScreen, gameState }) {
 </div>
 {/*  Right Panel: Command Center  */}
 <div className="col-span-4 flex flex-col gap-gutter">
-{/*  AI Chat / Interface  */}
-<div className="flex-1 pixel-border bg-panel-gray/80 p-4 flex flex-col">
-<div className="font-headline-md text-headline-md mb-4 border-b border-terminal-green pb-2">AI_COMMAND_CENTER</div>
-<div className="flex-1 flex flex-col gap-3 font-body-md text-body-md overflow-y-auto pr-2">
-<div className="flex gap-2">
-<span className="text-solstice-gold shrink-0">&gt;</span>
-<span className="opacity-80">Querying neural heuristics for Module 04 restoration...</span>
-</div>
-<div className="flex gap-2">
-<span className="text-soft-green shrink-0">AI:</span>
-<span>The synaptic pathways are fractured at coordinate 450,150. A Turing Fragment is held within the sub-layer. Please bridge the gap.</span>
-</div>
-<div className="flex gap-2 mt-4">
-<span className="text-solstice-gold shrink-0">&gt;</span>
-<span className="animate-pulse">_</span>
-</div>
-</div>
-<div className="flex flex-col gap-2 mt-4">
-<button className="w-full text-left p-2 border border-terminal-green hover:bg-terminal-green hover:text-surface font-label-caps text-label-caps flex justify-between items-center">
-                                QUERY NEURAL HEURISTICS
-                                <span className="material-symbols-outlined text-sm">arrow_forward</span>
-</button>
-<button className="w-full text-left p-2 border border-terminal-green hover:bg-terminal-green hover:text-surface font-label-caps text-label-caps flex justify-between items-center">
-                                RESTORE SYNAPTIC WEIGHTS
-                                <span className="material-symbols-outlined text-sm">arrow_forward</span>
-</button>
-<button className="w-full text-left p-2 border border-solstice-gold text-solstice-gold hover:bg-solstice-gold hover:text-surface font-label-caps text-label-caps flex justify-between items-center">
-                                ANALYZE TURING FRAGMENT
-                                <span className="material-symbols-outlined text-sm">search</span>
-</button>
-</div>
+<div className="flex-1 pixel-border bg-panel-gray/80 flex flex-col overflow-hidden">
+<AiTerminal />
 </div>
 {/*  Portrait Preview Fragment  */}
 <div className="h-48 pixel-border bg-surface p-2 flex flex-col relative">
