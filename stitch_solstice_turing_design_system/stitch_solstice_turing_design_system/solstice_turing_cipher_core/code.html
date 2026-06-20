@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SOLSTICE://TURING - CIPHER CORE</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        .scanline-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0, 255, 102, 0.05) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 100;
+        }
+        .crt-flicker {
+            animation: flicker 0.15s infinite;
+        }
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            100% { opacity: 1; }
+        }
+        .glow-green {
+            text-shadow: 0 0 8px rgba(0, 255, 102, 0.6);
+        }
+        .glow-gold {
+            text-shadow: 0 0 8px rgba(255, 213, 74, 0.6);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050505;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00FF66;
+            border: 2px solid #050505;
+        }
+        .cipher-input:focus {
+            outline: none;
+            box-shadow: inset 0 0 0 2px #FFD54A;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#ebc238",
+                        "panel-gray": "#111111",
+                        "terminal-green": "#00FF66",
+                        "surface": "#131313",
+                        "solstice-gold": "#FFD54A",
+                        "soft-green": "#33FF99",
+                        "warning-red": "#FF5555",
+                        "background": "#050505"
+                    },
+                    "spacing": {
+                        "margin": "24px",
+                        "container-max-width": "1280px",
+                        "border-width": "2px",
+                        "gutter": "16px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["VT323"],
+                        "headline-lg": ["\"Press Start 2P\""],
+                        "headline-md": ["\"Press Start 2P\""],
+                        "body-md": ["VT323"],
+                        "code-sm": ["VT323"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["16px", {"lineHeight": "16px"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "0.1em"}],
+                        "headline-md": ["16px", {"lineHeight": "24px"}],
+                        "body-md": ["18px", {"lineHeight": "22px"}],
+                        "code-sm": ["14px", {"lineHeight": "18px"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-terminal-green font-body-md overflow-hidden h-screen flex flex-col">
+<div class="scanline-overlay"></div>
+<!-- Top Navigation Bar (Shared Component) -->
+<header class="bg-surface border-b-2 border-terminal-green flex justify-between items-center px-gutter py-unit w-full max-w-container-max-width mx-auto z-50">
+<div class="font-headline-lg text-headline-lg text-terminal-green uppercase">SOLSTICE://TURING</div>
+<nav class="hidden md:flex gap-8 items-center">
+<a class="font-body-md text-body-md text-terminal-green opacity-70 hover:bg-terminal-green hover:text-surface transition-colors px-2 py-1" href="#">LOGIC</a>
+<a class="font-body-md text-body-md text-terminal-green opacity-70 hover:bg-terminal-green hover:text-surface transition-colors px-2 py-1" href="#">MEMORY</a>
+<a class="font-body-md text-body-md text-solstice-gold border-b-2 border-solstice-gold px-2 py-1" href="#">CIPHER</a>
+</nav>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-terminal-green cursor-pointer hover:scale-110 active:scale-95 transition-transform">settings</span>
+<span class="material-symbols-outlined text-terminal-green cursor-pointer hover:scale-110 active:scale-95 transition-transform">terminal</span>
+</div>
+</header>
+<!-- Main Content Container -->
+<main class="flex-1 flex overflow-hidden p-gutter gap-gutter max-w-container-max-width mx-auto w-full">
+<!-- Left Sidebar: System Status (SideNavBar Shared Hybrid) -->
+<aside class="hidden md:flex flex-col w-64 bg-panel-gray border-r-2 border-terminal-green p-4 gap-6 shrink-0 h-full">
+<div class="flex flex-col gap-2">
+<div class="font-headline-md text-headline-md text-terminal-green">SOLSTICE v1.0</div>
+<div class="font-code-sm text-code-sm text-warning-red uppercase tracking-widest animate-pulse">STATUS: CORRUPTED</div>
+</div>
+<!-- Solstice Meter (50% Progress) -->
+<div class="border-2 border-terminal-green p-3">
+<div class="font-label-caps text-label-caps mb-2 text-soft-green">RECOVERY PROGRESS [50%]</div>
+<div class="grid grid-cols-10 gap-1">
+<div class="h-4 bg-solstice-gold shadow-[0_0_8px_rgba(255,213,74,0.4)]"></div>
+<div class="h-4 bg-solstice-gold shadow-[0_0_8px_rgba(255,213,74,0.4)]"></div>
+<div class="h-4 bg-solstice-gold shadow-[0_0_8px_rgba(255,213,74,0.4)]"></div>
+<div class="h-4 bg-solstice-gold shadow-[0_0_8px_rgba(255,213,74,0.4)]"></div>
+<div class="h-4 bg-solstice-gold shadow-[0_0_8px_rgba(255,213,74,0.4)]"></div>
+<div class="h-4 border-2 border-terminal-green"></div>
+<div class="h-4 border-2 border-terminal-green"></div>
+<div class="h-4 border-2 border-terminal-green"></div>
+<div class="h-4 border-2 border-terminal-green"></div>
+<div class="h-4 border-2 border-terminal-green"></div>
+</div>
+</div>
+<nav class="flex flex-col gap-2">
+<div class="text-terminal-green p-2 flex items-center gap-2 hover:bg-soft-green hover:text-surface cursor-pointer">
+<span class="material-symbols-outlined">memory</span>
+<span class="font-label-caps text-label-caps uppercase">SYSTEM</span>
+</div>
+<div class="text-terminal-green p-2 flex items-center gap-2 hover:bg-soft-green hover:text-surface cursor-pointer">
+<span class="material-symbols-outlined">database</span>
+<span class="font-label-caps text-label-caps uppercase">ARCHIVE</span>
+</div>
+<div class="bg-terminal-green text-surface p-2 flex items-center gap-2 ring-2 ring-solstice-gold">
+<span class="material-symbols-outlined">enhanced_encryption</span>
+<span class="font-label-caps text-label-caps uppercase">DECRYPT</span>
+</div>
+<div class="text-terminal-green p-2 flex items-center gap-2 hover:bg-soft-green hover:text-surface cursor-pointer">
+<span class="material-symbols-outlined">terminal</span>
+<span class="font-label-caps text-label-caps uppercase">LOGS</span>
+</div>
+</nav>
+<button class="mt-auto bg-surface border-2 border-terminal-green text-terminal-green py-2 px-4 font-headline-md text-headline-md hover:bg-terminal-green hover:text-surface transition-none active:scale-95">
+                INITIATE RECOVERY
+            </button>
+</aside>
+<!-- Center Panel: Cipher Core -->
+<section class="flex-1 flex flex-col bg-panel-gray border-2 border-terminal-green overflow-hidden">
+<header class="border-b-2 border-terminal-green p-3 flex justify-between items-center bg-surface">
+<h2 class="font-headline-md text-headline-md glow-green">CIPHER CORE // MODULE_03</h2>
+<div class="flex items-center gap-2 text-soft-green font-code-sm">
+<span class="w-2 h-2 bg-terminal-green rounded-full animate-ping"></span>
+                    ACTIVE_RECONSTRUCTION: TRUE
+                </div>
+</header>
+<div class="flex-1 p-6 flex flex-col gap-8 overflow-y-auto crt-flicker">
+<!-- Encrypted String Display -->
+<div class="flex flex-col items-center gap-4">
+<div class="text-solstice-gold font-code-sm uppercase tracking-tighter">&gt;&gt;&gt; INTERCEPTED_SIGNAL_STREAM &lt;&lt;&lt;</div>
+<div class="bg-surface border-2 border-terminal-green p-8 w-full text-center">
+<span class="font-headline-lg text-[48px] tracking-[1rem] glow-green block mb-4">KHOOR</span>
+<span class="font-code-sm text-soft-green opacity-50">ENCRYPTION_TYPE: CAESAR_SHIFT_3</span>
+</div>
+</div>
+<!-- Puzzle Interface Bento Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<!-- Key Reference Table -->
+<div class="border-2 border-terminal-green p-4 bg-surface">
+<div class="font-label-caps text-label-caps text-solstice-gold mb-3 border-b border-terminal-green pb-1">CYPHER KEY: SHIFT +N</div>
+<div class="grid grid-cols-6 gap-2 text-center font-code-sm text-terminal-green">
+<div class="border border-terminal-green py-1">A → D</div>
+<div class="border border-terminal-green py-1">B → E</div>
+<div class="border border-terminal-green py-1">C → F</div>
+<div class="border border-terminal-green py-1">D → G</div>
+<div class="border border-terminal-green py-1">E → H</div>
+<div class="border border-terminal-green py-1">F → I</div>
+<div class="border border-terminal-green py-1">G → J</div>
+<div class="border border-terminal-green py-1">H → K</div>
+<div class="border border-terminal-green py-1">I → L</div>
+<div class="border border-terminal-green py-1">J → M</div>
+<div class="border border-terminal-green py-1">K → N</div>
+<div class="border border-terminal-green py-1">L → O</div>
+</div>
+<div class="mt-4 font-code-sm text-soft-green opacity-70 italic text-center">...TABLE_CONTINUES...</div>
+</div>
+<!-- Input Area -->
+<div class="flex flex-col gap-4">
+<div class="flex flex-col gap-2">
+<label class="font-label-caps text-label-caps text-terminal-green">DECODER_INPUT_PROMPT:</label>
+<input class="cipher-input bg-surface border-2 border-terminal-green p-4 font-headline-md text-solstice-gold placeholder-terminal-green/30 text-center uppercase" placeholder="_ENTER_DECRYPTED_TEXT" type="text"/>
+</div>
+<button class="bg-terminal-green text-surface font-headline-md py-4 hover:bg-solstice-gold transition-colors">EXECUTE_CIPHER_SOLVE</button>
+</div>
+</div>
+<!-- Binary to ASCII (Reference) -->
+<div class="border-2 border-terminal-green p-4 bg-surface relative overflow-hidden">
+
+<div class="font-label-caps text-label-caps text-solstice-gold mb-2">BITSTREAM_REFERENCE_ARCHIVE</div>
+<div class="grid grid-cols-4 gap-x-8 gap-y-1 font-code-sm text-soft-green">
+<div class="flex justify-between"><span>01001000</span><span>H</span></div>
+<div class="flex justify-between"><span>01000101</span><span>E</span></div>
+<div class="flex justify-between"><span>01001100</span><span>L</span></div>
+<div class="flex justify-between"><span>01001100</span><span>L</span></div>
+<div class="flex justify-between"><span>01001111</span><span>O</span></div>
+<div class="flex justify-between"><span>01010111</span><span>W</span></div>
+<div class="flex justify-between"><span>01010010</span><span>R</span></div>
+<div class="flex justify-between"><span>01000100</span><span>D</span></div>
+</div>
+</div>
+</div>
+<!-- System Logs (Bottom Pane) -->
+<footer class="border-t-2 border-terminal-green bg-surface h-24 overflow-y-auto p-2 font-code-sm text-soft-green">
+<div class="flex gap-4">
+<span class="text-terminal-green opacity-40">[14:32:05:22]</span>
+<span>ENCRYPTION KEY SYNCED</span>
+</div>
+<div class="flex gap-4">
+<span class="text-terminal-green opacity-40">[14:32:05:48]</span>
+<span>CIPHER_CORE_HEURISTICS: ONLINE</span>
+</div>
+<div class="flex gap-4">
+<span class="text-terminal-green opacity-40">[14:32:06:12]</span>
+<span class="text-solstice-gold">WARNING: PARTIAL SIGNAL DEGRADATION IN SECTOR 7G</span>
+</div>
+<div class="flex gap-4">
+<span class="text-terminal-green opacity-40">[14:32:06:33]</span>
+<span>HEURISTIC SCAN COMPLETE: READY FOR DECODER INPUT</span>
+</div>
+</footer>
+</section>
+<!-- Right Panel: AI Terminal & Turing Portrait -->
+<aside class="hidden lg:flex flex-col w-80 gap-gutter">
+<!-- AI Terminal (Gemini) -->
+<div class="flex-1 bg-panel-gray border-2 border-terminal-green flex flex-col overflow-hidden">
+<div class="bg-terminal-green text-surface px-2 py-1 font-headline-md text-xs uppercase">AI_TERMINAL_GMNI</div>
+<div class="flex-1 p-4 font-body-md text-terminal-green overflow-y-auto flex flex-col gap-4">
+<div class="typing-text">
+<span class="text-solstice-gold font-bold">&gt; </span>
+<span>Alan Turing's contributions to cryptography at Bletchley Park changed the course of history. His work on the Enigma machine wasn't just math; it was a race against time.</span>
+</div>
+<div class="typing-text bg-surface p-2 border border-terminal-green border-dashed">
+<span class="text-soft-green font-bold">HINT:</span>
+<span>Caesar Ciphers are simplistic. Shift each character back by 3 positions to find the core message. 'K' becomes 'H'. 'H' becomes 'E'. Do you see the pattern?</span>
+</div>
+<div class="mt-auto flex items-center gap-2 border-t border-terminal-green pt-2">
+<span class="text-terminal-green animate-pulse">_</span>
+<input class="bg-transparent border-none focus:ring-0 text-terminal-green w-full" placeholder="Query Gemini..." type="text"/>
+</div>
+</div>
+</div>
+<!-- Portrait Fragment (50%) -->
+<div class="h-64 bg-surface border-2 border-terminal-green relative overflow-hidden flex items-center justify-center">
+<!-- Portrait Image with data-alt -->
+<div class="absolute inset-0 grayscale contrast-150 opacity-40 mix-blend-screen" data-alt="A high-contrast, stylized digital portrait of Alan Turing, rendered in the aesthetic of a corrupted 1950s monitor. The image is split into quadrants, with the top-left and top-right sections clearly visible while the bottom half remains obscured by digital noise and green phosphor glitches. The lighting is harsh and dramatic, emphasizing the historical and intellectual gravitas of the subject against a pitch-black background with vibrant terminal-green scanlines." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA8VHSUOG-_SWUG_acqfSFFyfKqwyjkS0F97lpamxvmlgBVcVox6ND4NwVeCL5GTTkOyio8LJVsl0Cl0WGtfHw8TCCHMjtbVWHq_i5BoSrQhKTzmaKe1LrmMsbyvHlJN9BFg1XAJ2TEBEX3s9PB7zW_HnZIIUNiEQ0gBGLwrR9jLZP1BJXQ-73j-PWUZT6RFZsfQOWmebF7zKyDixHTYdrk4VvkeYsKWo2huDSmDPRQG7_54E2yIgPvuGGCJ1c-649Oda9vGFNEF0U')">
+</div>
+<!-- Masking Overlay to simulate 50% completion -->
+<div class="absolute inset-0 flex flex-col">
+<div class="flex-1 flex">
+<div class="flex-1"></div> <!-- Top Left Visible -->
+<div class="flex-1"></div> <!-- Top Right Visible -->
+</div>
+<div class="flex-1 bg-background flex items-center justify-center border-t-2 border-terminal-green">
+<span class="font-headline-md text-xs text-terminal-green animate-pulse">LOCKED: 0x44F2</span>
+</div>
+</div>
+<div class="relative z-10 font-label-caps text-label-caps bg-background px-2 border border-terminal-green shadow-[0_0_10px_rgba(0,255,102,0.5)]">
+                    SUBJECT: TURING_A
+                </div>
+</div>
+</aside>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="fixed bottom-0 w-full flex justify-between items-center px-gutter py-2 z-50 bg-surface border-t-2 border-terminal-green">
+<div class="font-headline-lg-mobile text-headline-lg-mobile text-terminal-green">[EST 1954]</div>
+<div class="font-code-sm text-code-sm text-soft-green opacity-80">TURING ARCHIVE RECOVERY PROTOCOL</div>
+<nav class="flex gap-4">
+<a class="font-code-sm text-code-sm text-soft-green opacity-60 hover:text-terminal-green transition-opacity" href="#">REBOOT</a>
+<a class="font-code-sm text-code-sm text-soft-green opacity-60 hover:text-terminal-green transition-opacity" href="#">DUMP</a>
+<a class="font-code-sm text-code-sm text-soft-green opacity-60 hover:text-terminal-green transition-opacity" href="#">HELP</a>
+</nav>
+</footer>
+<script>
+        // Micro-interaction: Typing effect simulation
+        document.querySelectorAll('.typing-text').forEach(el => {
+            const text = el.innerText;
+            el.innerText = '';
+            let i = 0;
+            const timer = setInterval(() => {
+                if (i < text.length) {
+                    el.innerText += text.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(timer);
+                }
+            }, 20);
+        });
+
+        // Interactive DIP switches simulation or Logic Bit Toggles
+        // Not explicitly requested but fits the design system
+    </script>
+</body></html>

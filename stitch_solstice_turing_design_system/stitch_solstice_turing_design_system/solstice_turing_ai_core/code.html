@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SOLSTICE://TURING - AI CORE</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed": "#00210e",
+                    "warning-red": "#FF5555",
+                    "surface-container-low": "#1c1b1b",
+                    "on-secondary": "#3c2f00",
+                    "inverse-on-surface": "#313030",
+                    "surface-container": "#201f1f",
+                    "primary-fixed-dim": "#00e55b",
+                    "on-secondary-container": "#423400",
+                    "solstice-gold": "#FFD54A",
+                    "on-primary-fixed": "#002107",
+                    "tertiary-fixed": "#5affa2",
+                    "on-tertiary-container": "#00703e",
+                    "surface-container-high": "#2a2a2a",
+                    "primary-fixed": "#6bff83",
+                    "text-white": "#EDEDED",
+                    "on-surface-variant": "#b9ccb5",
+                    "surface-bright": "#3a3939",
+                    "secondary-fixed": "#ffe085",
+                    "terminal-green": "#00FF66",
+                    "tertiary": "#ebffec",
+                    "error": "#ffb4ab",
+                    "surface-variant": "#353534",
+                    "secondary-container": "#bf9a01",
+                    "soft-green": "#33FF99",
+                    "on-error-container": "#ffdad6",
+                    "surface-tint": "#00e55b",
+                    "inverse-surface": "#e5e2e1",
+                    "surface": "#131313",
+                    "on-primary-fixed-variant": "#00531b",
+                    "on-primary": "#003911",
+                    "on-secondary-fixed": "#231b00",
+                    "on-surface": "#e5e2e1",
+                    "outline": "#849581",
+                    "on-error": "#690005",
+                    "inverse-primary": "#006e27",
+                    "primary": "#edffe8",
+                    "on-tertiary": "#00391d",
+                    "on-secondary-fixed-variant": "#574500",
+                    "tertiary-fixed-dim": "#00e384",
+                    "surface-container-highest": "#353534",
+                    "on-background": "#e5e2e1",
+                    "error-container": "#93000a",
+                    "secondary": "#ebc238",
+                    "outline-variant": "#3b4b3a",
+                    "tertiary-container": "#2dfc96",
+                    "surface-container-lowest": "#0e0e0e",
+                    "on-tertiary-fixed-variant": "#00522c",
+                    "on-primary-container": "#007128",
+                    "primary-container": "#00ff66",
+                    "panel-gray": "#111111",
+                    "background": "#131313",
+                    "secondary-fixed-dim": "#ebc238",
+                    "surface-dim": "#131313"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0px",
+                    "lg": "0px",
+                    "xl": "0px",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "gutter": "16px",
+                    "margin": "24px",
+                    "border-width": "2px",
+                    "container-max-width": "1280px"
+            },
+            "fontFamily": {
+                    "label-caps": ["VT323"],
+                    "headline-md": ["\"Press Start 2P\""],
+                    "headline-lg-mobile": ["\"Press Start 2P\""],
+                    "headline-lg": ["\"Press Start 2P\""],
+                    "body-md": ["VT323"],
+                    "code-sm": ["VT323"],
+                    "body-lg": ["VT323"]
+            },
+            "fontSize": {
+                    "label-caps": ["16px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "headline-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["18px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "0.1em", "fontWeight": "400"}],
+                    "body-md": ["18px", {"lineHeight": "22px", "fontWeight": "400"}],
+                    "code-sm": ["14px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "body-lg": ["22px", {"lineHeight": "26px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #050505;
+            color: #00FF66;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .crt-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .phosphor-glow {
+            text-shadow: 0 0 8px rgba(0, 255, 102, 0.4);
+        }
+
+        .gold-glow {
+            text-shadow: 0 0 8px rgba(255, 213, 74, 0.6);
+        }
+
+        .pixel-border {
+            border: 2px solid #00FF66;
+            box-shadow: inset 0 0 0 1px #000;
+        }
+
+        .pixel-border-gold {
+            border: 2px solid #FFD54A;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        .scanline-anim {
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(0deg, transparent 0%, rgba(0, 255, 102, 0.05) 50%, transparent 100%);
+            position: absolute;
+            animation: scanline 8s linear infinite;
+        }
+
+        .neural-node {
+            width: 12px;
+            height: 12px;
+            border: 2px solid #00FF66;
+            background: #050505;
+        }
+
+        .neural-node.active {
+            background: #FFD54A;
+            border-color: #FFD54A;
+            box-shadow: 0 0 10px #FFD54A;
+        }
+
+        .synapse-line {
+            height: 2px;
+            background: rgba(0, 255, 102, 0.3);
+        }
+
+        .synapse-line.active {
+            background: #FFD54A;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #00FF66; border: 2px solid #050505; }
+    </style>
+</head>
+<body class="font-body-md text-body-md h-screen flex flex-col">
+<div class="crt-overlay"></div>
+<div class="scanline-anim"></div>
+<!-- Header / TopAppBar -->
+<header class="bg-surface border-b-2 border-terminal-green flex justify-between items-center px-gutter py-unit w-full z-50">
+<div class="font-headline-lg text-headline-lg text-terminal-green uppercase phosphor-glow">
+            SOLSTICE://TURING
+        </div>
+<div class="flex gap-gutter items-center">
+<nav class="hidden md:flex gap-6">
+<a class="text-terminal-green opacity-70 hover:bg-terminal-green hover:text-surface transition-none font-headline-md text-headline-md px-2" href="#">LOGIC</a>
+<a class="text-terminal-green opacity-70 hover:bg-terminal-green hover:text-surface transition-none font-headline-md text-headline-md px-2" href="#">MEMORY</a>
+<a class="text-terminal-green opacity-70 hover:bg-terminal-green hover:text-surface transition-none font-headline-md text-headline-md px-2" href="#">CIPHER</a>
+</nav>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-terminal-green cursor-pointer hover:scale-95">settings</span>
+<span class="material-symbols-outlined text-terminal-green cursor-pointer hover:scale-95">terminal</span>
+</div>
+</div>
+</header>
+<div class="flex-1 flex overflow-hidden">
+<!-- Sidebar / SideNavBar -->
+<aside class="w-64 bg-panel-gray border-r-2 border-terminal-green flex flex-col p-4 gap-6 shrink-0 h-full">
+<div class="flex flex-col gap-2 mb-4">
+<div class="w-full aspect-square pixel-border p-1 bg-surface relative overflow-hidden">
+<img class="w-full h-full object-cover opacity-80 grayscale" data-alt="A gritty, pixel-art style headshot of a generic technician in a CRT-monitor style filter, monochromatic green and black. The subject wears a headset and a vintage military-style jumpsuit, appearing as a 1950s tech operative. High contrast and visible pixels define the aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQDowO-w3j78tMzDxKjf_3HhkaWs-ui_wIYVLERLgp5VWhsq8uavxrH0KBNBiFBvePjQfMwjqHieyvOemTaK2cRLnAMkslJtJ2Am6iUCc79wj5WL0zfPDZwUTTb5jd6SPAlvy5nEuq2LEZRqd6Jo2NjYz82ERqLV-8csbBfFzlJub1g4G9dOqboiedQopaf27wVxgqk5O_LDgOqlWdqQtAX9JE5DXzDKf64kmfAu6CGkFlrTqYwHivCWZvaTga0hX-d4dwbRyaIXo"/>
+<div class="absolute bottom-0 left-0 right-0 bg-terminal-green text-surface font-label-caps text-label-caps px-1">TURING PROFILE FRAME</div>
+</div>
+<div class="font-headline-md text-headline-md text-terminal-green mt-2">SOLSTICE v1.0</div>
+<div class="text-warning-red font-label-caps text-label-caps">STATUS: CORRUPTED</div>
+</div>
+<!-- Solstice Meter & Corruption -->
+<div class="flex flex-col gap-4">
+<div class="space-y-1">
+<div class="flex justify-between font-label-caps text-label-caps">
+<span>SOLSTICE METER</span>
+<span class="text-solstice-gold">75%</span>
+</div>
+<div class="flex gap-1">
+<div class="w-full h-4 bg-solstice-gold pixel-border-gold"></div>
+<div class="w-full h-4 bg-solstice-gold pixel-border-gold"></div>
+<div class="w-full h-4 bg-solstice-gold pixel-border-gold"></div>
+<div class="w-full h-4 bg-solstice-gold pixel-border-gold"></div>
+<div class="w-full h-4 bg-solstice-gold pixel-border-gold"></div>
+<div class="w-full h-4 bg-solstice-gold pixel-border-gold"></div>
+<div class="w-full h-4 bg-solstice-gold pixel-border-gold"></div>
+<div class="w-full h-4 border-2 border-terminal-green opacity-30"></div>
+<div class="w-full h-4 border-2 border-terminal-green opacity-30"></div>
+<div class="w-full h-4 border-2 border-terminal-green opacity-30"></div>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between font-label-caps text-label-caps">
+<span>CORRUPTION</span>
+<span class="text-warning-red">25%</span>
+</div>
+<div class="h-2 w-full bg-surface-container-low border border-terminal-green p-[1px]">
+<div class="h-full bg-warning-red w-[25%]"></div>
+</div>
+</div>
+</div>
+<nav class="flex flex-col gap-2 mt-4">
+<div class="text-terminal-green p-2 flex items-center gap-2 hover:bg-soft-green hover:text-surface cursor-pointer font-label-caps text-label-caps">
+<span class="material-symbols-outlined">memory</span> SYSTEM
+                </div>
+<div class="text-terminal-green p-2 flex items-center gap-2 hover:bg-soft-green hover:text-surface cursor-pointer font-label-caps text-label-caps">
+<span class="material-symbols-outlined">database</span> ARCHIVE
+                </div>
+<div class="bg-terminal-green text-surface p-2 flex items-center gap-2 ring-2 ring-solstice-gold font-label-caps text-label-caps">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dns</span> CORE
+                </div>
+<div class="text-terminal-green p-2 flex items-center gap-2 hover:bg-soft-green hover:text-surface cursor-pointer font-label-caps text-label-caps">
+<span class="material-symbols-outlined">enhanced_encryption</span> DECRYPT
+                </div>
+<div class="text-terminal-green p-2 flex items-center gap-2 hover:bg-soft-green hover:text-surface cursor-pointer font-label-caps text-label-caps">
+<span class="material-symbols-outlined">terminal</span> LOGS
+                </div>
+</nav>
+<button class="mt-auto pixel-border bg-surface text-terminal-green font-headline-md text-headline-md py-4 hover:bg-terminal-green hover:text-surface transition-none active:scale-95">
+                INITIATE RECOVERY
+            </button>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col p-gutter gap-gutter bg-surface relative">
+<div class="absolute inset-0 z-0 opacity-10">
+
+</div>
+<!-- Workspace Header -->
+<div class="flex justify-between items-end border-b-2 border-terminal-green pb-2 z-10">
+<div class="flex flex-col">
+<span class="text-soft-green font-label-caps text-label-caps">LOCATION: SYSTEM_ROOT / CORE_AI</span>
+<h1 class="font-headline-lg text-headline-lg phosphor-glow">AI CORE // MODULE_04</h1>
+</div>
+<div class="text-terminal-green font-code-sm text-code-sm border-2 border-terminal-green px-2 py-1">
+                    TIME_UNTIL_SYNC: 04:22:19
+                </div>
+</div>
+<!-- Center Panel: Neural Network Puzzle -->
+<div class="flex-1 grid grid-cols-12 gap-gutter z-10">
+<div class="col-span-8 pixel-border bg-panel-gray/80 p-gutter flex flex-col relative overflow-hidden">
+<div class="flex justify-between items-center mb-6">
+<span class="font-headline-md text-headline-md">NEURAL NETWORK RESTORATION</span>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 bg-solstice-gold gold-glow"></span>
+<span class="font-label-caps text-label-caps">ACTIVE SYNAPSE</span>
+</div>
+</div>
+<div class="flex-1 flex items-center justify-center relative">
+<!-- Neural Connection Visualization -->
+<div class="w-full h-full max-w-2xl max-h-96 relative">
+<!-- SVG for lines -->
+<svg class="absolute inset-0 w-full h-full" style="pointer-events: none;">
+<path d="M 50,150 L 150,100" opacity="0.4" stroke="#00FF66" stroke-dasharray="4" stroke-width="2"></path>
+<path d="M 50,150 L 150,200" opacity="0.4" stroke="#00FF66" stroke-dasharray="4" stroke-width="2"></path>
+<path d="M 150,100 L 250,100" stroke="#FFD54A" stroke-width="3"></path>
+<path d="M 150,200 L 250,200" opacity="0.4" stroke="#00FF66" stroke-dasharray="4" stroke-width="2"></path>
+<path d="M 250,100 L 350,150" stroke="#FFD54A" stroke-width="3"></path>
+<path class="animate-[pulse_1.5s_infinite]" d="M 350,150 L 450,150" stroke="#FFD54A" stroke-dasharray="8 4" stroke-width="3"></path>
+<!-- Gap to bridge -->
+<circle cx="450" cy="150" fill="#FFD54A" r="4"></circle>
+</svg>
+<!-- Nodes as absolute div elements for interactivity -->
+<div class="absolute neural-node active" style="left: 50px; top: 150px;"></div>
+<div class="absolute neural-node active" style="left: 150px; top: 100px;"></div>
+<div class="absolute neural-node" style="left: 150px; top: 200px;"></div>
+<div class="absolute neural-node active" style="left: 250px; top: 100px;"></div>
+<div class="absolute neural-node active" style="left: 350px; top: 150px;"></div>
+<!-- Decision Point -->
+<div class="absolute top-[130px] right-[50px] flex flex-col gap-4 items-center">
+<span class="font-label-caps text-label-caps text-solstice-gold mb-2">BRIDGE SYNAPTIC GAP</span>
+<div class="flex gap-8">
+<button class="w-16 h-16 pixel-border-gold bg-panel-gray flex items-center justify-center font-headline-lg text-headline-lg text-solstice-gold hover:bg-solstice-gold hover:text-surface transition-none group">
+                                        0
+                                        <span class="absolute -bottom-6 text-[10px] font-label-caps opacity-0 group-hover:opacity-100">LOGIC_PATH_A</span>
+</button>
+<button class="w-16 h-16 pixel-border border-terminal-green bg-panel-gray flex items-center justify-center font-headline-lg text-headline-lg text-terminal-green hover:bg-terminal-green hover:text-surface transition-none group">
+                                        1
+                                        <span class="absolute -bottom-6 text-[10px] font-label-caps opacity-0 group-hover:opacity-100">LOGIC_PATH_B</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-4 border-t border-terminal-green/30 pt-2 flex justify-between font-code-sm text-code-sm">
+<div class="flex gap-4">
+<span>LATENCY: 14ms</span>
+<span>THROUGHPUT: 1.2 GB/s</span>
+</div>
+<div class="text-solstice-gold">AWAITING BINARY INPUT...</div>
+</div>
+</div>
+<!-- Right Panel: Command Center -->
+<div class="col-span-4 flex flex-col gap-gutter">
+<!-- AI Chat / Interface -->
+<div class="flex-1 pixel-border bg-panel-gray/80 p-4 flex flex-col">
+<div class="font-headline-md text-headline-md mb-4 border-b border-terminal-green pb-2">AI_COMMAND_CENTER</div>
+<div class="flex-1 flex flex-col gap-3 font-body-md text-body-md overflow-y-auto pr-2">
+<div class="flex gap-2">
+<span class="text-solstice-gold shrink-0">&gt;</span>
+<span class="opacity-80">Querying neural heuristics for Module 04 restoration...</span>
+</div>
+<div class="flex gap-2">
+<span class="text-soft-green shrink-0">AI:</span>
+<span>The synaptic pathways are fractured at coordinate 450,150. A Turing Fragment is held within the sub-layer. Please bridge the gap.</span>
+</div>
+<div class="flex gap-2 mt-4">
+<span class="text-solstice-gold shrink-0">&gt;</span>
+<span class="animate-pulse">_</span>
+</div>
+</div>
+<div class="flex flex-col gap-2 mt-4">
+<button class="w-full text-left p-2 border border-terminal-green hover:bg-terminal-green hover:text-surface font-label-caps text-label-caps flex justify-between items-center">
+                                QUERY NEURAL HEURISTICS
+                                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+<button class="w-full text-left p-2 border border-terminal-green hover:bg-terminal-green hover:text-surface font-label-caps text-label-caps flex justify-between items-center">
+                                RESTORE SYNAPTIC WEIGHTS
+                                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+<button class="w-full text-left p-2 border border-solstice-gold text-solstice-gold hover:bg-solstice-gold hover:text-surface font-label-caps text-label-caps flex justify-between items-center">
+                                ANALYZE TURING FRAGMENT
+                                <span class="material-symbols-outlined text-sm">search</span>
+</button>
+</div>
+</div>
+<!-- Portrait Preview Fragment -->
+<div class="h-48 pixel-border bg-surface p-2 flex flex-col relative">
+<div class="font-label-caps text-label-caps mb-1 flex justify-between">
+<span>FRAGMENT 3/4 RECOVERED</span>
+<span class="text-soft-green">75% VISIBLE</span>
+</div>
+<div class="flex-1 bg-black relative overflow-hidden flex flex-wrap">
+<!-- 3/4 Portrait Mosaic -->
+<div class="w-1/2 h-1/2 pixel-border border-terminal-green/20">
+<img class="w-full h-full object-cover" data-alt="Close-up pixelated vintage black and white photograph of Alan Turing's face, specifically his top-left facial features. The image is rendered with a heavy dithering effect and monochromatic green/black phosphor color palette. 1950s mainframe display style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC11kDFnF2VyATkZWgIHrahDcy5uMHLpFK39xHW7obBreo6tXFNxCEiZh3Uvzy0iw2IyC96KWTHiPTB3G3MzPmPFVst2HVLBrU7XJcVi1LeUgAVZQI8egIHEwz2NoC1iFl28RWh9n2BkFxSVg9YMEq7IvYulgyk-8SK8cG3RdlGCeTbEcdMe2UtDF3PsIcd5Se8J15O-4xROy9n_Wg3j9AsVx-YnhaWMgylSS5CKaVPtZjia3h8MSXp_w8axNIx4KYy95rZwfMa4VA"/>
+</div>
+<div class="w-1/2 h-1/2 pixel-border border-terminal-green/20">
+<img class="w-full h-full object-cover" data-alt="Close-up pixelated vintage black and white photograph of Alan Turing's face, specifically his top-right facial features. Monochromatic green phosphor aesthetic on a CRT monitor, high contrast, 1950s tech noir style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlnxJZwBICLjVl__U1kAi8DgrYOGejjE4hwIiSG7usDv1C-Ha8TXLeKSaghmaMOvUCkxU37zOPn4bHBKZQmrJ6NpPazwNC49o0n5zHooPMeKGCuAVoICZjMlkR2-RvTAqg036tgzsVdQx-rZft8mfG4F_Byi85K6rOec9qJemVa6OJR_ZKxMrPuFXwQkJP76d2pOuIQfo-SYyTu2elKFZB0CtRPpdKORIeVbd04t2emPupK4qv5HIk_D8mk4mXAwRNS2wp7p7lnWg"/>
+</div>
+<div class="w-1/2 h-1/2 pixel-border border-terminal-green/20">
+<img class="w-full h-full object-cover" data-alt="Close-up pixelated vintage black and white photograph of Alan Turing's face, specifically his bottom-left facial features. Digital archaeology aesthetic, corrupted data visualization, green and black pixels." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA495sos9gALG_zaovQGnr2kmH_qsevKvmiXrhWqWKH1OvnGWLzhJSSMwDGdYwQ8FrY4D1t0P3VhvDD3NYncvDinUP_rWF4KiQyPIC5xLdYRkhqQCZUHFRyRkASrB2-HOkKeo2gwnsIBBD27wYEPA6p7JRQlFDIiY7uPhu_yz-IBGvSz_6SmTNkbBdXDrhUgWPAw_i00a9FaYsqFQyLJAb8E_HtLjIAisXxfrhBpWu8ON_mxajVTLkr9tEjdVn9HWBoYxEP183Ku14"/>
+</div>
+<div class="w-1/2 h-1/2 border-2 border-dashed border-warning-red flex items-center justify-center bg-warning-red/10">
+<span class="text-warning-red font-label-caps text-label-caps animate-pulse">LOCKED</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Panel: System Logs -->
+<footer class="h-24 bg-panel-gray border-t-2 border-terminal-green px-4 py-2 flex gap-gutter items-center shrink-0 z-10">
+<div class="flex-1 font-code-sm text-code-sm overflow-hidden flex flex-col justify-end">
+<div class="flex gap-4 opacity-60">
+<span>[21:14:02:12]</span>
+<span>AI CORE SYNC IN PROGRESS...</span>
+</div>
+<div class="flex gap-4 opacity-80">
+<span>[21:14:05:44]</span>
+<span class="text-soft-green">NEURAL PATHWAY ALPHA RESTORED</span>
+</div>
+<div class="flex gap-4">
+<span>[21:14:09:88]</span>
+<span class="text-solstice-gold">TURING PORTRAIT FRAGMENT 3/4 RECOVERED</span>
+</div>
+</div>
+<div class="flex gap-gutter font-code-sm text-code-sm items-center shrink-0">
+<span class="hover:text-terminal-green cursor-pointer">REBOOT</span>
+<span class="hover:text-terminal-green cursor-pointer">DUMP</span>
+<span class="hover:text-terminal-green cursor-pointer">HELP</span>
+<div class="text-terminal-green font-label-caps text-label-caps border border-terminal-green px-2 ml-4">
+                        [EST 1954] - TURING ARCHIVE RECOVERY PROTOCOL
+                    </div>
+</div>
+</footer>
+</main>
+</div>
+<!-- Micro-interaction script -->
+<script>
+        document.addEventListener('mousemove', (e) => {
+            const glow = document.querySelector('.scanline-anim');
+            // Subtle lighting follow effect could be added here
+        });
+
+        // Typing effect for the AI chat
+        const chatLogs = [
+            "Analyzing synaptic weighting...",
+            "Heuristic discrepancy detected in sector 4.",
+            "Integrity check: 88.4%."
+        ];
+
+        let logIndex = 0;
+        const appendLog = () => {
+            if (logIndex < chatLogs.length) {
+                const container = document.querySelector('.overflow-y-auto');
+                const logDiv = document.createElement('div');
+                logDiv.className = 'flex gap-2 opacity-0 transition-opacity duration-500';
+                logDiv.innerHTML = `<span class="text-soft-green shrink-0">AI:</span> <span>${chatLogs[logIndex]}</span>`;
+                container.insertBefore(logDiv, container.lastElementChild);
+                setTimeout(() => logDiv.classList.remove('opacity-0'), 50);
+                logIndex++;
+                setTimeout(appendLog, 3000);
+            }
+        };
+
+        setTimeout(appendLog, 2000);
+    </script>
+</body></html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SOLSTICE://TURING - MEMORY CORE</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-container": "#bf9a01",
+                        "on-error": "#690005",
+                        "on-background": "#e5e2e1",
+                        "surface-tint": "#00e55b",
+                        "on-surface": "#e5e2e1",
+                        "primary-fixed": "#6bff83",
+                        "on-primary-container": "#007128",
+                        "soft-green": "#33FF99",
+                        "inverse-on-surface": "#313030",
+                        "on-tertiary-fixed": "#00210e",
+                        "surface-container-high": "#2a2a2a",
+                        "on-tertiary-container": "#00703e",
+                        "tertiary-fixed-dim": "#00e384",
+                        "on-secondary": "#3c2f00",
+                        "on-error-container": "#ffdad6",
+                        "error": "#ffb4ab",
+                        "surface-container-low": "#1c1b1b",
+                        "primary": "#edffe8",
+                        "surface-dim": "#131313",
+                        "outline-variant": "#3b4b3a",
+                        "surface-container-highest": "#353534",
+                        "panel-gray": "#111111",
+                        "surface-variant": "#353534",
+                        "secondary-fixed": "#ffe085",
+                        "inverse-surface": "#e5e2e1",
+                        "on-surface-variant": "#b9ccb5",
+                        "surface": "#131313",
+                        "tertiary-fixed": "#5affa2",
+                        "on-primary-fixed": "#002107",
+                        "on-primary-fixed-variant": "#00531b",
+                        "inverse-primary": "#006e27",
+                        "on-secondary-fixed-variant": "#574500",
+                        "primary-fixed-dim": "#00e55b",
+                        "on-tertiary-fixed-variant": "#00522c",
+                        "secondary": "#ebc238",
+                        "solstice-gold": "#FFD54A",
+                        "on-secondary-fixed": "#231b00",
+                        "terminal-green": "#00FF66",
+                        "secondary-fixed-dim": "#ebc238",
+                        "warning-red": "#FF5555",
+                        "error-container": "#93000a",
+                        "on-secondary-container": "#423400",
+                        "outline": "#849581",
+                        "background": "#050505",
+                        "on-tertiary": "#00391d",
+                        "surface-bright": "#3a3939",
+                        "tertiary-container": "#2dfc96",
+                        "primary-container": "#00ff66",
+                        "on-primary": "#003911",
+                        "text-white": "#EDEDED",
+                        "surface-container": "#201f1f",
+                        "tertiary": "#ebffec",
+                        "surface-container-lowest": "#0e0e0e"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["\"Press Start 2P\""],
+                        "headline-lg": ["\"Press Start 2P\""],
+                        "body-md": ["VT323"],
+                        "code-sm": ["VT323"],
+                        "label-caps": ["VT323"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #050505;
+            color: #00FF66;
+            overflow: hidden;
+            font-family: 'VT323', monospace;
+        }
+
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0.15;
+        }
+
+        .scanline {
+            width: 100%;
+            height: 100px;
+            z-index: 1001;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgba(255, 255, 255, 0.2) 50%, rgba(0, 0, 0, 0) 100%);
+            opacity: 0.1;
+            position: absolute;
+            bottom: 100%;
+            animation: scanline 10s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { bottom: 100%; }
+            100% { bottom: -100px; }
+        }
+
+        .pixel-border {
+            border: 2px solid #00FF66;
+            position: relative;
+        }
+
+        .gold-glow {
+            text-shadow: 0 0 8px rgba(255, 213, 74, 0.6);
+        }
+
+        .green-glow {
+            text-shadow: 0 0 5px rgba(0, 255, 102, 0.4);
+        }
+
+        .binary-unit {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #00FF66;
+        }
+
+        .terminal-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .terminal-scroll::-webkit-scrollbar-track {
+            background: #050505;
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb {
+            background: #00FF66;
+        }
+
+        @keyframes cursor-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background: #00FF66;
+            animation: cursor-blink 1s step-end infinite;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col p-4 gap-4">
+<div class="crt-overlay"></div>
+<div class="scanline"></div>
+<!-- Top Navigation Bar (Shared Component) -->
+<header class="flex justify-between items-center px-4 py-2 w-full max-w-[1280px] mx-auto border-b-2 border-terminal-green bg-surface">
+<div class="font-headline-lg text-[24px] text-terminal-green uppercase tracking-widest">SOLSTICE://TURING</div>
+<nav class="hidden md:flex gap-8">
+<a class="font-body-md text-[18px] text-terminal-green opacity-70 hover:bg-terminal-green hover:text-surface transition-colors px-2" href="#">LOGIC</a>
+<a class="font-body-md text-[18px] text-solstice-gold border-b-2 border-solstice-gold px-2" href="#">MEMORY</a>
+<a class="font-body-md text-[18px] text-terminal-green opacity-70 hover:bg-terminal-green hover:text-surface transition-colors px-2" href="#">CIPHER</a>
+</nav>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">settings</span>
+<span class="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
+</div>
+</header>
+<main class="flex-1 flex gap-4 overflow-hidden max-w-[1400px] mx-auto w-full">
+<!-- Left Sidebar: Status & Restoration -->
+<aside class="w-64 flex flex-col gap-4">
+<!-- System Status Panel -->
+<div class="pixel-border bg-panel-gray p-4 flex flex-col gap-4">
+<div class="border-b-2 border-terminal-green pb-1 mb-2">
+<h2 class="font-headline-md text-[16px] text-terminal-green uppercase">CORE_STATUS</h2>
+</div>
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-soft-green">CORRUPTION</span>
+<span class="font-body-md text-warning-red">92%</span>
+</div>
+<div class="h-4 w-full bg-surface-container-lowest pixel-border overflow-hidden">
+<div class="h-full bg-warning-red w-[92%] opacity-60"></div>
+</div>
+</div>
+<div class="flex flex-col gap-2 mt-2">
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-solstice-gold gold-glow">LIGHT RESTORED</span>
+<span class="font-body-md text-solstice-gold">25%</span>
+</div>
+<!-- Solstice Meter -->
+<div class="flex gap-1">
+<div class="w-full h-6 flex gap-1">
+<div class="flex-1 bg-solstice-gold border border-solstice-gold"></div>
+<div class="flex-1 bg-solstice-gold border border-solstice-gold"></div>
+<div class="flex-1 border-2 border-terminal-green opacity-30"></div>
+<div class="flex-1 border-2 border-terminal-green opacity-30"></div>
+<div class="flex-1 border-2 border-terminal-green opacity-30"></div>
+<div class="flex-1 border-2 border-terminal-green opacity-30"></div>
+<div class="flex-1 border-2 border-terminal-green opacity-30"></div>
+<div class="flex-1 border-2 border-terminal-green opacity-30"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Navigation Panel -->
+<div class="pixel-border bg-panel-gray flex-1 p-4">
+<h3 class="font-headline-md text-[14px] text-terminal-green mb-4 border-b border-terminal-green pb-1">SUBSYSTEMS</h3>
+<nav class="flex flex-col gap-2">
+<div class="p-2 flex items-center gap-3 text-terminal-green opacity-70 hover:bg-soft-green hover:text-surface cursor-pointer">
+<span class="material-symbols-outlined text-[18px]">memory</span>
+<span class="font-label-caps uppercase">SYSTEM</span>
+</div>
+<div class="p-2 flex items-center gap-3 text-terminal-green opacity-70 hover:bg-soft-green hover:text-surface cursor-pointer">
+<span class="material-symbols-outlined text-[18px]">database</span>
+<span class="font-label-caps uppercase">ARCHIVE</span>
+</div>
+<div class="bg-terminal-green text-surface p-2 flex items-center gap-3 ring-2 ring-solstice-gold">
+<span class="material-symbols-outlined text-[18px]">enhanced_encryption</span>
+<span class="font-label-caps uppercase">DECRYPT</span>
+</div>
+<div class="p-2 flex items-center gap-3 text-terminal-green opacity-70 hover:bg-soft-green hover:text-surface cursor-pointer">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span class="font-label-caps uppercase">LOGS</span>
+</div>
+<div class="p-2 flex items-center gap-3 text-terminal-green opacity-70 hover:bg-soft-green hover:text-surface cursor-pointer">
+<span class="material-symbols-outlined text-[18px]">dns</span>
+<span class="font-label-caps uppercase">CORE</span>
+</div>
+</nav>
+<button class="w-full mt-6 pixel-border border-solstice-gold text-solstice-gold font-headline-md text-[12px] py-3 hover:bg-solstice-gold hover:text-black transition-colors active:scale-95">
+                    INITIATE RECOVERY
+                </button>
+</div>
+</aside>
+<!-- Center Panel: The Puzzle Core -->
+<section class="flex-1 flex flex-col gap-4">
+<div class="pixel-border bg-panel-gray p-4 flex flex-col relative h-full">
+<!-- Header -->
+<div class="flex justify-between items-center mb-6 border-b-2 border-terminal-green pb-2">
+<div>
+<h1 class="font-headline-md text-[20px] text-terminal-green">MEMORY CORE // MODULE_02</h1>
+<p class="font-body-md text-soft-green opacity-80 mt-1">FLIP-FLOP CIRCUIT SYNCHRONIZATION</p>
+</div>
+<div class="text-right">
+<div class="font-label-caps text-terminal-green">MODULE_STATE: <span class="text-solstice-gold animate-pulse">SYNC_REQUIRED</span></div>
+<div class="font-code-sm text-soft-green opacity-50">ADDR: 0x4F_2A_99</div>
+</div>
+</div>
+<!-- Main Puzzle Area -->
+<div class="flex-1 flex flex-col items-center justify-center gap-12 py-8 border border-terminal-green/20 relative overflow-hidden">
+<!-- Background Shader for Atmosphere -->
+
+<!-- Circuit Visualization -->
+<div class="relative w-full max-w-2xl flex flex-col items-center">
+<div class="flex items-center gap-12">
+<!-- Input Nodes -->
+<div class="flex flex-col gap-4">
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-soft-green">SET</span>
+<div class="w-12 h-0.5 bg-terminal-green"></div>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-soft-green">RESET</span>
+<div class="w-12 h-0.5 bg-terminal-green"></div>
+</div>
+</div>
+<!-- Logic Gate (Flip-Flop) -->
+<div class="pixel-border w-48 h-32 flex flex-col items-center justify-center bg-surface relative z-10">
+<span class="font-headline-md text-[14px] text-terminal-green mb-2">FLIP-FLOP</span>
+<div class="flex gap-4">
+<div class="flex flex-col items-center">
+<span class="font-code-sm text-soft-green">Q</span>
+<div class="w-8 h-8 border-2 border-solstice-gold gold-glow flex items-center justify-center font-body-lg">1</div>
+</div>
+<div class="flex flex-col items-center">
+<span class="font-code-sm text-soft-green">!Q</span>
+<div class="w-8 h-8 border-2 border-terminal-green opacity-50 flex items-center justify-center font-body-lg">0</div>
+</div>
+</div>
+<div class="absolute -right-12 top-1/2 -translate-y-1/2 w-12 h-0.5 bg-solstice-gold shadow-[0_0_10px_#FFD54A]"></div>
+</div>
+<!-- Output State -->
+<div class="flex flex-col items-center gap-2">
+<span class="font-label-caps text-solstice-gold gold-glow">CURRENT STATE</span>
+<div class="w-16 h-16 pixel-border border-solstice-gold flex items-center justify-center bg-surface-container-low">
+<span class="font-headline-lg text-[32px] text-solstice-gold gold-glow">1</span>
+</div>
+</div>
+</div>
+<!-- Sequence Display -->
+<div class="mt-16 flex flex-col items-center gap-4 bg-surface-container-low p-6 pixel-border border-soft-green/30">
+<span class="font-label-caps text-soft-green">INPUT SEQUENCE BUFFER</span>
+<div class="flex gap-4">
+<div class="binary-unit text-solstice-gold gold-glow font-body-lg bg-surface">1</div>
+<div class="binary-unit text-soft-green opacity-50 font-body-lg bg-surface">0</div>
+<div class="binary-unit text-solstice-gold gold-glow font-body-lg bg-surface">1</div>
+<div class="binary-unit text-solstice-gold gold-glow font-body-lg bg-surface">1</div>
+<div class="flex items-center mx-2">
+<span class="material-symbols-outlined text-terminal-green animate-pulse">arrow_forward</span>
+</div>
+<div class="binary-unit border-dashed border-soft-green text-soft-green animate-pulse font-body-lg">?</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Interaction Footer -->
+<div class="mt-4 flex flex-col items-center gap-4">
+<p class="font-body-lg text-soft-green text-center">Predict the final state of the circuit after the input sequence is processed.</p>
+<div class="flex gap-6 mb-2">
+<button class="w-20 h-20 pixel-border border-terminal-green font-headline-lg text-[32px] text-terminal-green hover:bg-terminal-green hover:text-black transition-none active:scale-95 active:ring-2 active:ring-solstice-gold group">
+                            0
+                        </button>
+<button class="w-20 h-20 pixel-border border-solstice-gold font-headline-lg text-[32px] text-solstice-gold gold-glow hover:bg-solstice-gold hover:text-black transition-none active:scale-95 active:ring-2 active:ring-white">
+                            1
+                        </button>
+</div>
+<div class="font-code-sm text-soft-green/50 italic">[INPUT REQUIRED: SELECT BIT TO COMMIT STATE]</div>
+</div>
+</div>
+</section>
+<!-- Right AI Terminal (Gemini) -->
+<aside class="w-80 flex flex-col gap-4">
+<div class="pixel-border bg-panel-gray flex-1 flex flex-col overflow-hidden">
+<!-- AI Header -->
+<div class="p-3 bg-surface-container-high border-b-2 border-terminal-green flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-terminal-green">terminal</span>
+<span class="font-headline-md text-[12px] text-terminal-green">AI_ASSISTANT_GEMINI</span>
+</div>
+<div class="flex gap-1">
+<div class="w-2 h-2 bg-terminal-green rounded-full animate-pulse"></div>
+</div>
+</div>
+<!-- Chat History -->
+<div class="flex-1 p-4 overflow-y-auto terminal-scroll font-body-md text-soft-green flex flex-col gap-4">
+<div class="flex flex-col gap-1">
+<div class="flex gap-2">
+<span class="text-terminal-green font-bold">SYSTEM:</span>
+<span class="opacity-80">Memory Core Module_02 online. Corruption preventing state persistence.</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex gap-2">
+<span class="text-solstice-gold font-bold">GEMINI:</span>
+<span class="typing-text">Greetings, operator. A Flip-Flop is a basic storage element. In this configuration, each '1' in the sequence flips the state, while '0' maintains the current value. Observe the sequence carefully...</span>
+</div>
+</div>
+<div class="flex flex-col gap-1 mt-2">
+<div class="flex gap-2 text-terminal-green">
+<span class="font-bold">&gt;</span>
+<span>Explain state flip logic.</span>
+</div>
+</div>
+</div>
+<!-- AI Actions -->
+<div class="p-2 border-t border-terminal-green/30 grid grid-cols-2 gap-2">
+<button class="pixel-border border-terminal-green/50 text-terminal-green font-label-caps py-2 text-[12px] hover:bg-terminal-green hover:text-black">HINT</button>
+<button class="pixel-border border-terminal-green/50 text-terminal-green font-label-caps py-2 text-[12px] hover:bg-terminal-green hover:text-black">EXPLAIN XOR</button>
+</div>
+<!-- Input Area -->
+<div class="p-3 bg-black flex items-center gap-2">
+<span class="text-terminal-green font-bold text-[20px]">&gt;</span>
+<input class="bg-transparent border-none outline-none text-terminal-green w-full font-body-md p-0 focus:ring-0" placeholder="Type command..." type="text"/>
+<div class="cursor"></div>
+</div>
+</div>
+<!-- Asset Preview / Identity Frame -->
+<div class="pixel-border h-48 bg-panel-gray overflow-hidden relative">
+<div class="absolute top-2 left-2 z-10 bg-black/80 px-2 font-code-sm text-terminal-green">FRAG_ID: 1912-A</div>
+<div class="w-full h-full bg-cover bg-center grayscale contrast-125 brightness-75" data-alt="A highly detailed, pixelated portrait of Alan Turing in a retro-cyberpunk terminal style. The image uses only black and terminal green colors with phosphor glow effects. His face is partially corrupted by digital noise and horizontal scanlines, suggesting an archive under recovery. The background is a dark mainframe grid with glowing binary code elements." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBDmCOkNc8teYh8bu9qa4gGzlwl8QLkKBySNytKgUOf241X92pO5gnHBtsB6Lt0Q9V3KbV4WidW-vnCofjPaBlGmxAsfmGH-WQlfYMJjSIN5Urum1uJ45qB4ZsdlLa0wydUczt5Af3uK79_TZZJfh9nqFf6ScSNwNNtCRsqGzDV7veasesevrGYdU8IBuUVIyYN2Ji9lFtmFi00YKwqhFp6IkxDURCsQ35gy5FkXXKFQ4LX5tjaOLYNp0ZQDtBE1sJNqpy77R1Npko')"></div>
+<div class="absolute inset-0 border-2 border-terminal-green/20 pointer-events-none"></div>
+</div>
+</aside>
+</main>
+<!-- Bottom System Logs -->
+<footer class="fixed bottom-0 left-0 w-full flex justify-between items-center px-6 py-2 z-50 bg-surface border-t-2 border-terminal-green">
+<div class="flex gap-8 items-center h-full">
+<div class="font-code-sm text-soft-green opacity-60 flex gap-4">
+<span class="text-terminal-green">[12:44:02]</span>
+<span>SYNC_MODULE_02: WAITING_FOR_USER_INPUT...</span>
+</div>
+<div class="font-code-sm text-soft-green opacity-60 flex gap-4">
+<span class="text-terminal-green">[12:44:05]</span>
+<span class="text-solstice-gold">MEMORY_STATE_STORED: ADDR_0x4F</span>
+</div>
+</div>
+<div class="flex gap-6">
+<a class="font-code-sm text-soft-green opacity-60 hover:text-terminal-green uppercase" href="#">REBOOT</a>
+<a class="font-code-sm text-soft-green opacity-60 hover:text-terminal-green uppercase" href="#">DUMP</a>
+<a class="font-code-sm text-soft-green opacity-60 hover:text-terminal-green uppercase" href="#">HELP</a>
+</div>
+<div class="font-code-sm text-soft-green opacity-60">
+            [EST 1954] - TURING ARCHIVE RECOVERY PROTOCOL
+        </div>
+</footer>
+<script>
+        // Typing effect for Gemini
+        const typingElement = document.querySelector('.typing-text');
+        if (typingElement) {
+            const text = typingElement.innerText;
+            typingElement.innerText = '';
+            let i = 0;
+            const type = () => {
+                if (i < text.length) {
+                    typingElement.innerText += text.charAt(i);
+                    i++;
+                    setTimeout(type, 30);
+                }
+            };
+            type();
+        }
+
+        // Simple binary flicker effect
+        setInterval(() => {
+            const state = document.querySelector('.binary-unit.animate-pulse');
+            if (state) {
+                state.style.opacity = Math.random() > 0.5 ? '1' : '0.5';
+            }
+        }, 150);
+    </script>
+</body></html>

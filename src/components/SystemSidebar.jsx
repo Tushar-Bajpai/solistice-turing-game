@@ -1,0 +1,160 @@
+import React, { useEffect, useRef } from 'react';
+import { animate } from 'animejs';
+
+export default function SystemSidebar({ currentScreen, setCurrentScreen, gameState }) {
+  const safeGameState = gameState || { lightRestoration: 0, corruptionLevel: 92, logicComplete: false, modules: {} };
+  const modules = safeGameState.modules || {};
+  
+  const corruptionBarRef = useRef(null);
+  
+  useEffect(() => {
+    if (corruptionBarRef.current) {
+      animate(corruptionBarRef.current, {
+        width: `${safeGameState.corruptionLevel}%`,
+        duration: 1500,
+        ease: 'outElastic(1, .8)'
+      });
+    }
+  }, [safeGameState.corruptionLevel]);
+
+  const progress = safeGameState.lightRestoration;
+  const blockCount = 10;
+  const filledBlocks = Math.floor(progress / 10);
+
+  const getNavClass = (screenName, moduleKey) => {
+    let base = "p-2 flex justify-between items-center cursor-pointer font-label-caps text-label-caps border border-transparent transition-all ";
+    
+    // Status text
+    let statusText = modules[moduleKey] ? 'COMPLETED' : (currentScreen === screenName ? 'ACTIVE' : 'LOCKED');
+    
+    // Active Screen Styling
+    if (currentScreen === screenName) {
+      base += "bg-terminal-green text-surface ring-2 ring-solstice-gold ";
+    } else {
+      base += "text-terminal-green hover:bg-soft-green/20 ";
+    }
+    
+    if (modules[moduleKey]) {
+      // Completed styling
+      base += currentScreen === screenName ? "" : "text-solstice-gold opacity-80 ";
+    }
+
+    return { className: base, statusText };
+  };
+
+  const logicNav = getNavClass('MainHub', 'logic');
+  const memoryNav = getNavClass('MemoryCore', 'memory');
+  const cipherNav = getNavClass('CipherCore', 'cipher');
+  const aiNav = getNavClass('AiCore', 'ai');
+
+  const handleRecoveryClick = () => {
+    if (progress >= 100) {
+      setCurrentScreen('ReconstructionCore');
+    }
+  };
+
+  return (
+    <aside className="w-64 flex flex-col gap-gutter shrink-0 h-full">
+      <section className="flex flex-col h-full terminal-border bg-panel-gray p-4 gap-4 relative overflow-hidden">
+        {currentScreen === 'AiCore' ? (
+          <div className="flex flex-col gap-2 mb-4 relative z-10">
+            <div className="w-full aspect-square pixel-border p-1 bg-surface relative overflow-hidden">
+              <div className="w-full h-full flex items-center justify-center text-[6px] leading-[6px] sm:text-[8px] sm:leading-[8px] text-terminal-green font-code-sm bg-black overflow-hidden opacity-80 pt-4 pb-8">
+                <pre>{`
+    .@@@@@@@@.
+   @@@@@@@@@@@@
+  @@@        @@@
+  @@  (o)  (o)  @@
+  @@    __    @@
+  @@@  \\__/  @@@
+   @@@@@@@@@@@@
+    '@@@@@@@@'
+`}</pre>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 bg-terminal-green text-surface font-label-caps text-label-caps px-1 z-10">TURING PROFILE FRAME</div>
+            </div>
+            <div className="font-headline-md text-headline-md text-terminal-green mt-2">SOLSTICE v1.0</div>
+            <div className="text-warning-red font-label-caps text-label-caps">STATUS: CORRUPTED</div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 border-b border-terminal-green pb-2 relative z-10">
+            <span className="material-symbols-outlined text-terminal-green">memory</span>
+            <h2 className="font-headline-md text-headline-md text-terminal-green">SYSTEM</h2>
+          </div>
+        )}
+        
+        <div className="space-y-6 flex-grow relative z-10">
+          {/* Corruption Level */}
+          <div>
+            <div className="flex justify-between font-label-caps text-label-caps mb-1">
+              <span>CORRUPTION_LVL</span>
+              <span className="text-warning-red">{Number(safeGameState.corruptionLevel.toFixed(1))}%</span>
+            </div>
+            <div className="w-full h-4 terminal-border p-0.5 overflow-hidden">
+              <div ref={corruptionBarRef} className="h-full bg-warning-red" style={{ width: '92%' }}></div>
+            </div>
+          </div>
+          
+          {/* Solstice Meter */}
+          <div>
+            <div className="flex justify-between font-label-caps text-label-caps mb-1 text-solstice-gold">
+              <span>SOLSTICE_METER</span>
+              <span>{Number(progress.toFixed(1))}%</span>
+            </div>
+            <div className="grid grid-cols-10 gap-1 h-6">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div 
+                  key={i} 
+                  className={`terminal-border transition-colors duration-500 ${i < filledBlocks ? 'bg-solstice-gold border-solstice-gold' : 'border-solstice-gold'}`}
+                  style={{ opacity: i < filledBlocks ? 1 : 0.3 }}
+                ></div>
+              ))}
+            </div>
+            <p className="font-code-sm text-code-sm text-solstice-gold mt-2 uppercase">
+              {progress >= 100 ? 'Light Restoration: COMPLETE' : 'Light Restoration: REQUIRED'}
+            </p>
+          </div>
+          
+          {/* NAV LINKS */}
+          <nav className="flex flex-col gap-2 mt-auto w-full">
+            <div onClick={() => setCurrentScreen('MainHub')} className={logicNav.className}>
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined">dns</span>
+                <span>LOGIC</span>
+              </div>
+              <span className="text-[10px]">{logicNav.statusText}</span>
+            </div>
+            <div onClick={() => setCurrentScreen('MemoryCore')} className={memoryNav.className}>
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined">database</span>
+                <span>MEMORY</span>
+              </div>
+              <span className="text-[10px]">{memoryNav.statusText}</span>
+            </div>
+            <div onClick={() => setCurrentScreen('CipherCore')} className={cipherNav.className}>
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined">enhanced_encryption</span>
+                <span>CIPHER</span>
+              </div>
+              <span className="text-[10px]">{cipherNav.statusText}</span>
+            </div>
+            <div onClick={() => setCurrentScreen('AiCore')} className={aiNav.className}>
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined">psychology</span>
+                <span>AI_CORE</span>
+              </div>
+              <span className="text-[10px]">{aiNav.statusText}</span>
+            </div>
+          </nav>
+        </div>
+        
+        <button 
+          onClick={handleRecoveryClick}
+          className={`w-full relative z-10 terminal-border bg-panel-gray font-headline-md py-4 text-xs transition-colors ${progress >= 100 ? 'hover:bg-solstice-gold hover:text-black text-solstice-gold border-solstice-gold shadow-[0_0_15px_rgba(255,215,0,0.5)]' : 'hover:bg-terminal-green hover:text-surface text-terminal-green'}`}
+        >
+          {progress >= 100 ? 'RECONSTRUCT TURING' : 'CONTINUE RESTORATION'}
+        </button>
+      </section>
+    </aside>
+  );
+}

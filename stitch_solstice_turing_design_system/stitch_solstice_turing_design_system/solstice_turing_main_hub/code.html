@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SOLSTICE://TURING - MAIN HUB</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P:wght@100..900&family=VT323:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "inverse-on-surface": "#313030",
+                "on-surface-variant": "#b9ccb5",
+                "on-secondary-fixed-variant": "#574500",
+                "inverse-surface": "#e5e2e1",
+                "on-primary-container": "#007128",
+                "on-secondary": "#3c2f00",
+                "outline-variant": "#3b4b3a",
+                "warning-red": "#FF5555",
+                "surface-container-lowest": "#0e0e0e",
+                "secondary-fixed": "#ffe085",
+                "on-secondary-fixed": "#231b00",
+                "surface-container-highest": "#353534",
+                "error": "#ffb4ab",
+                "on-primary-fixed": "#002107",
+                "outline": "#849581",
+                "on-tertiary-fixed": "#00210e",
+                "secondary": "#ebc238",
+                "on-tertiary": "#00391d",
+                "solstice-gold": "#FFD54A",
+                "surface-variant": "#353534",
+                "on-tertiary-fixed-variant": "#00522c",
+                "surface-dim": "#131313",
+                "on-primary-fixed-variant": "#00531b",
+                "on-error": "#690005",
+                "tertiary-container": "#2dfc96",
+                "on-surface": "#e5e2e1",
+                "surface-container-high": "#2a2a2a",
+                "on-background": "#e5e2e1",
+                "on-secondary-container": "#423400",
+                "tertiary-fixed-dim": "#00e384",
+                "on-error-container": "#ffdad6",
+                "tertiary": "#ebffec",
+                "terminal-green": "#00FF66",
+                "primary-fixed": "#6bff83",
+                "text-white": "#EDEDED",
+                "primary-fixed-dim": "#00e55b",
+                "on-primary": "#003911",
+                "tertiary-fixed": "#5affa2",
+                "surface": "#131313",
+                "surface-bright": "#3a3939",
+                "surface-container": "#201f1f",
+                "surface-tint": "#00e55b",
+                "primary-container": "#00ff66",
+                "error-container": "#93000a",
+                "panel-gray": "#111111",
+                "inverse-primary": "#006e27",
+                "background": "#131313",
+                "secondary-fixed-dim": "#ebc238",
+                "secondary-container": "#bf9a01",
+                "surface-container-low": "#1c1b1b",
+                "primary": "#edffe8",
+                "soft-green": "#33FF99",
+                "on-tertiary-container": "#00703e"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "spacing": {
+                "unit": "4px",
+                "border-width": "2px",
+                "container-max-width": "1280px",
+                "gutter": "16px",
+                "margin": "24px"
+            },
+            "fontFamily": {
+                "headline-lg-mobile": ["\"Press Start 2P\""],
+                "headline-md": ["\"Press Start 2P\""],
+                "code-sm": ["VT323"],
+                "headline-lg": ["\"Press Start 2P\""],
+                "label-caps": ["VT323"],
+                "body-lg": ["VT323"],
+                "body-md": ["VT323"]
+            },
+            "fontSize": {
+                "headline-lg-mobile": ["18px", {"lineHeight": "24px", "fontWeight": "400"}],
+                "headline-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                "code-sm": ["14px", {"lineHeight": "18px", "fontWeight": "400"}],
+                "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "0.1em", "fontWeight": "400"}],
+                "label-caps": ["16px", {"lineHeight": "16px", "fontWeight": "400"}],
+                "body-lg": ["22px", {"lineHeight": "26px", "fontWeight": "400"}],
+                "body-md": ["18px", {"lineHeight": "22px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        @keyframes scanline {
+            0% { bottom: 100%; }
+            100% { bottom: 0%; }
+        }
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            5% { opacity: 0.95; }
+            10% { opacity: 0.99; }
+            15% { opacity: 0.96; }
+            20% { opacity: 1; }
+            100% { opacity: 1; }
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        body {
+            background-color: #050505;
+            color: #00FF66;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .crt-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .scanline {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100px;
+            background: linear-gradient(to bottom, transparent, rgba(0, 255, 102, 0.05), transparent);
+            animation: scanline 8s linear infinite;
+            z-index: 101;
+            pointer-events: none;
+        }
+
+        .flicker-layer {
+            animation: flicker 0.15s infinite;
+        }
+
+        .phosphor-glow {
+            text-shadow: 0 0 4px rgba(0, 255, 102, 0.3);
+        }
+
+        .solstice-glow {
+            text-shadow: 0 0 8px rgba(255, 213, 74, 0.5);
+            box-shadow: inset 0 0 8px rgba(255, 213, 74, 0.2);
+        }
+
+        .terminal-border {
+            border: 2px solid #00FF66;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background-color: #00FF66;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #00FF66; }
+    </style>
+</head>
+<body class="font-body-md text-body-md selection:bg-terminal-green selection:text-surface">
+<div class="crt-overlay"></div>
+<div class="scanline"></div>
+<div class="flex flex-col h-screen p-gutter gap-gutter flicker-layer">
+<!-- TOP APP BAR -->
+<header class="w-full flex justify-between items-center py-unit terminal-border border-b-2 border-terminal-green bg-surface px-gutter shrink-0">
+<div class="font-headline-lg text-headline-lg text-terminal-green uppercase tracking-tighter phosphor-glow">
+                SOLSTICE://TURING
+            </div>
+<nav class="hidden md:flex gap-8">
+<a class="font-label-caps text-label-caps text-solstice-gold border-b-2 border-solstice-gold" href="#">LOGIC</a>
+<a class="font-label-caps text-label-caps text-terminal-green opacity-70 hover:opacity-100 transition-opacity" href="#">MEMORY</a>
+<a class="font-label-caps text-label-caps text-terminal-green opacity-70 hover:opacity-100 transition-opacity" href="#">CIPHER</a>
+</nav>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
+<span class="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">settings</span>
+</div>
+</header>
+<!-- MAIN DASHBOARD CONTENT -->
+<main class="flex-grow flex gap-gutter overflow-hidden h-full">
+<!-- LEFT PANEL: SYSTEM STATUS -->
+<aside class="w-64 flex flex-col gap-gutter shrink-0 h-full">
+<section class="flex flex-col h-full terminal-border bg-panel-gray p-4 gap-4">
+<div class="flex items-center gap-2 border-b border-terminal-green pb-2">
+<span class="material-symbols-outlined text-terminal-green">memory</span>
+<h2 class="font-headline-md text-headline-md text-terminal-green">SYSTEM</h2>
+</div>
+<div class="space-y-6 flex-grow">
+<!-- Corruption Level -->
+<div>
+<div class="flex justify-between font-label-caps text-label-caps mb-1">
+<span>CORRUPTION_LVL</span>
+<span class="text-warning-red">92%</span>
+</div>
+<div class="w-full h-4 terminal-border p-0.5 overflow-hidden">
+<div class="h-full bg-warning-red" style="width: 92%"></div>
+</div>
+</div>
+<!-- Solstice Meter -->
+<div>
+<div class="flex justify-between font-label-caps text-label-caps mb-1 text-solstice-gold">
+<span>SOLSTICE_METER</span>
+<span>0%</span>
+</div>
+<div class="grid grid-cols-10 gap-1 h-6">
+<!-- 10 Discrete blocks for the meter -->
+<div class="terminal-border border-solstice-gold"></div>
+<div class="terminal-border border-solstice-gold"></div>
+<div class="terminal-border border-solstice-gold"></div>
+<div class="terminal-border border-solstice-gold"></div>
+<div class="terminal-border border-solstice-gold"></div>
+<div class="terminal-border border-solstice-gold"></div>
+<div class="terminal-border border-solstice-gold"></div>
+<div class="terminal-border border-solstice-gold"></div>
+<div class="terminal-border border-solstice-gold"></div>
+<div class="terminal-border border-solstice-gold"></div>
+</div>
+<p class="font-code-sm text-code-sm text-solstice-gold mt-2 uppercase">Light Restoration: REQUIRED</p>
+</div>
+<!-- NAV LINKS -->
+<nav class="flex flex-col gap-2 mt-auto">
+<div class="bg-terminal-green text-surface p-2 flex items-center gap-2 ring-2 ring-solstice-gold">
+<span class="material-symbols-outlined">dns</span>
+<span class="font-label-caps text-label-caps">LOGIC</span>
+</div>
+<div class="text-terminal-green p-2 flex items-center gap-2 hover:bg-soft-green/20">
+<span class="material-symbols-outlined">database</span>
+<span class="font-label-caps text-label-caps">MEMORY</span>
+</div>
+<div class="text-terminal-green p-2 flex items-center gap-2 hover:bg-soft-green/20">
+<span class="material-symbols-outlined">enhanced_encryption</span>
+<span class="font-label-caps text-label-caps">CIPHER</span>
+</div>
+<div class="text-terminal-green p-2 flex items-center gap-2 hover:bg-soft-green/20">
+<span class="material-symbols-outlined">psychology</span>
+<span class="font-label-caps text-label-caps">AI_CORE</span>
+</div>
+</nav>
+</div>
+<button class="w-full terminal-border bg-panel-gray hover:bg-terminal-green hover:text-surface text-terminal-green font-headline-md py-4 text-xs transition-colors">
+                        INITIATE RECOVERY
+                    </button>
+</section>
+</aside>
+<!-- CENTER PANEL: LOGIC CORE -->
+<section class="flex-grow flex flex-col terminal-border bg-panel-gray overflow-hidden">
+<div class="bg-terminal-green text-surface px-4 py-2 flex justify-between items-center shrink-0">
+<h2 class="font-headline-md text-headline-md text-sm">LOGIC CORE // MODULE_01</h2>
+<span class="font-label-caps text-label-caps">STATUS: CORRUPTED</span>
+</div>
+<div class="flex-grow relative p-gutter flex flex-col items-center justify-center gap-12">
+<!-- Retro Puzzle Interface -->
+<div class="w-full max-w-2xl terminal-border p-8 bg-surface-container relative">
+<div class="absolute -top-3 left-6 bg-surface px-2 text-terminal-green font-code-sm uppercase">Binary Logic Reconstruction</div>
+<div class="grid grid-cols-3 gap-8 items-center">
+<!-- Inputs -->
+<div class="flex flex-col gap-8">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 terminal-border flex items-center justify-center text-solstice-gold solstice-glow font-headline-lg">1</div>
+<div class="font-label-caps text-label-caps">INPUT A</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 terminal-border flex items-center justify-center text-panel-gray font-headline-lg opacity-30">0</div>
+<div class="font-label-caps text-label-caps">INPUT B</div>
+</div>
+</div>
+<!-- Gate Center -->
+<div class="flex flex-col items-center justify-center gap-4">
+<div class="w-24 h-24 terminal-border border-solstice-gold border-dashed flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl text-solstice-gold animate-pulse">question_mark</span>
+</div>
+<div class="h-0.5 w-16 bg-terminal-green"></div>
+</div>
+<!-- Target Output -->
+<div class="flex flex-col items-center gap-4">
+<div class="w-16 h-16 terminal-border border-solstice-gold flex items-center justify-center">
+<span class="text-solstice-gold font-headline-lg phosphor-glow">1</span>
+</div>
+<div class="font-label-caps text-label-caps text-solstice-gold">TARGET</div>
+</div>
+</div>
+<div class="mt-12 text-center text-terminal-green font-body-md animate-pulse">
+                            REPAIR LOGIC GATE TO RESTORE 25% LIGHT
+                        </div>
+</div>
+<!-- Interaction Buttons -->
+<div class="flex gap-4">
+<button class="px-8 py-3 terminal-border hover:bg-terminal-green hover:text-surface transition-all font-headline-md text-xs active:scale-95">AND</button>
+<button class="px-8 py-3 terminal-border hover:bg-terminal-green hover:text-surface transition-all font-headline-md text-xs active:scale-95">OR</button>
+<button class="px-8 py-3 terminal-border hover:bg-terminal-green hover:text-surface transition-all font-headline-md text-xs active:scale-95">XOR</button>
+</div>
+</div>
+</section>
+<!-- RIGHT PANEL: AI TERMINAL -->
+<section class="w-80 flex flex-col terminal-border bg-panel-gray h-full shrink-0">
+<div class="border-b-2 border-terminal-green p-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-terminal-green">psychology</span>
+<h2 class="font-headline-md text-headline-md text-xs uppercase">AI TERMINAL</h2>
+</div>
+<div class="flex-grow p-4 font-code-sm text-soft-green overflow-y-auto space-y-4" id="ai-messages">
+<div class="flex gap-2">
+<span class="text-terminal-green opacity-50">[SYSTEM]:</span>
+<span>Connection established. Solstice Shell V1.0 active.</span>
+</div>
+<div class="flex gap-2">
+<span class="text-terminal-green opacity-50">[CORE]:</span>
+<span id="ai-typing">QUERY SYSTEM CORE...</span><span class="cursor"></span>
+</div>
+</div>
+<div class="p-4 border-t-2 border-terminal-green flex flex-col gap-2">
+<button class="w-full text-left p-2 font-code-sm text-terminal-green border border-terminal-green/30 hover:border-terminal-green hover:bg-terminal-green hover:text-surface">
+                        > EXPLAIN XOR
+                    </button>
+<button class="w-full text-left p-2 font-code-sm text-terminal-green border border-terminal-green/30 hover:border-terminal-green hover:bg-terminal-green hover:text-surface">
+                        > GIVE HINT
+                    </button>
+<div class="mt-2 flex gap-2 terminal-border p-2">
+<span class="text-terminal-green">></span>
+<input class="bg-transparent border-none focus:ring-0 p-0 text-terminal-green w-full font-code-sm" placeholder="COMMAND..." type="text"/>
+</div>
+</div>
+</section>
+</main>
+<!-- BOTTOM PANEL: SYSTEM LOGS -->
+<footer class="h-32 terminal-border bg-surface shrink-0 p-4 font-code-sm text-code-sm flex flex-col gap-1 overflow-hidden relative">
+<div class="absolute top-0 right-4 px-2 bg-surface text-terminal-green opacity-50 text-[10px] uppercase font-headline-md">Live Stream logs</div>
+<div class="flex flex-col gap-1" id="log-container">
+<div class="flex gap-4">
+<span class="text-soft-green opacity-50">[08:42:15:23]</span>
+<span class="text-warning-red">CORRUPTION DETECTED IN SECTOR 7...</span>
+</div>
+<div class="flex gap-4">
+<span class="text-soft-green opacity-50">[08:42:16:01]</span>
+<span class="text-soft-green">WAITING FOR INPUT...</span>
+</div>
+<div class="flex gap-4">
+<span class="text-soft-green opacity-50">[08:42:17:88]</span>
+<span class="text-terminal-green">LOGIC_GATE_STATUS: DISCONNECTED</span>
+</div>
+<div class="flex gap-4">
+<span class="text-soft-green opacity-50">[08:42:19:42]</span>
+<span class="text-solstice-gold">GOLD_CORE_HEURISTICS: OFFLINE</span>
+</div>
+</div>
+</footer>
+</div>
+<!-- AUDIO/VISUAL FEEDBACK SCRIPT -->
+<script>
+        // Simple Typing Effect for AI Terminal
+        const aiTyping = document.getElementById('ai-typing');
+        const phrases = [
+            "SCANNING_LOGIC_PATHWAYS...",
+            "CORRUPTION_THRESHOLD_CRITICAL",
+            "AWAITING_INPUT_SIGNAL...",
+            "QUERY SYSTEM CORE..."
+        ];
+        let phraseIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+
+        function type() {
+            const currentPhrase = phrases[phraseIndex];
+            if (isDeleting) {
+                aiTyping.textContent = currentPhrase.substring(0, charIndex--);
+            } else {
+                aiTyping.textContent = currentPhrase.substring(0, charIndex++);
+            }
+
+            if (!isDeleting && charIndex === currentPhrase.length + 1) {
+                setTimeout(() => isDeleting = true, 3000);
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                phraseIndex = (phraseIndex + 1) % phrases.length;
+            }
+
+            const speed = isDeleting ? 30 : 60;
+            setTimeout(type, speed);
+        }
+
+        // Random Log Generation
+        const logs = [
+            "BUFFER OVERFLOW IN MEMORY_BANK_4",
+            "DATA INTEGRITY CHECK: FAILED",
+            "RESTORING SYSTEM ASSETS...",
+            "PHOSPHOR DECAY DETECTED",
+            "ENCRYPTION KEY SYNCED",
+            "ALERT: UNAUTHORIZED ACCESS ATTEMPT",
+            "KERNEL PANIC AVERTED"
+        ];
+        const logContainer = document.getElementById('log-container');
+
+        function addLog() {
+            const time = new Date();
+            const timeStr = `[${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}:${time.getSeconds().toString().padStart(2, '0')}:${Math.floor(Math.random() * 99).toString().padStart(2, '0')}]`;
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'flex gap-4';
+            const logText = logs[Math.floor(Math.random() * logs.length)];
+            const colorClass = Math.random() > 0.8 ? 'text-warning-red' : 'text-soft-green';
+            
+            logEntry.innerHTML = `<span class="text-soft-green opacity-50">${timeStr}</span><span class="${colorClass}">${logText}</span>`;
+            
+            logContainer.appendChild(logEntry);
+            if (logContainer.children.length > 5) {
+                logContainer.removeChild(logContainer.firstChild);
+            }
+            
+            setTimeout(addLog, 2000 + Math.random() * 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            type();
+            addLog();
+            
+            // Interaction Simulation
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const ripple = document.createElement('div');
+                    ripple.className = 'fixed inset-0 pointer-events-none bg-terminal-green opacity-10';
+                    document.body.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 50);
+                });
+            });
+        });
+    </script>
+</body></html>

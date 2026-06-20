@@ -1,0 +1,142 @@
+import React, { useEffect } from 'react';
+
+export default function Shader() {
+  useEffect(() => {
+    /* 
+    Extracted Scripts from original HTML:
+    
+(function() {
+  const canvas = document.getElementById('shader-canvas-ANIMATION_10');
+
+  // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+  // This fires on initial layout and whenever the element is resized.
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+
+varying vec2 v_texCoord;
+
+void main() {
+    vec2 uv = v_texCoord;
+    
+    // Golden Solstice Palette
+    vec3 spaceColor = vec3(0.02, 0.02, 0.02); // Deep terminal black
+    vec3 sunColor = vec3(1.0, 0.83, 0.29);   // Solstice Gold (#FFD54A)
+    vec3 horizonColor = vec3(0.0, 1.0, 0.4); // Terminal Green Glow (#00FF66)
+    
+    // Animate the sunrise position based on time
+    // We want it to "rise" and then pulse gently
+    float riseProgress = min(u_time * 0.3, 1.0);
+    float sunY = 0.2 + (riseProgress * 0.3);
+    vec2 sunPos = vec2(0.5, sunY);
+    
+    float dist = distance(uv, sunPos);
+    
+    // Core of the sun
+    float sunCore = smoothstep(0.15, 0.0, dist);
+    
+    // Atmospheric glow
+    float glow = exp(-dist * 4.0) * riseProgress;
+    
+    // Horizon line glow
+    float horizon = smoothstep(0.4, 0.0, abs(uv.y - 0.2)) * (1.0 - dist) * 0.5;
+    
+    // Final composition
+    vec3 color = spaceColor;
+    color = mix(color, horizonColor, horizon * riseProgress);
+    color += sunColor * sunCore * 1.5;
+    color += sunColor * glow * 0.6;
+    
+    // Add some terminal scanline "noise" to the shader
+    float scanline = sin(uv.y * u_resolution.y * 0.8) * 0.04;
+    color -= scanline;
+    
+    // Fade in from black
+    float globalFade = smoothstep(0.0, 2.0, u_time);
+    
+    gl_FragColor = vec4(color, globalFade * 0.4); // Subtle background overlay
+}`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+  // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+  // Shaders that need normalized coords should use: u_mouse / u_resolution.
+  let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+  window.addEventListener('mousemove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      const nx = (event.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+      mouse.x = nx * canvas.width;
+      mouse.y = ny * canvas.height;
+    }
+  });
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+
+
+    */
+  }, []);
+
+  return (
+    <>
+      
+{/*  STITCH_SHADER_START:ANIMATION_10 className="fixed inset-0 w-full h-full"  */}
+<div className="fixed inset-0 w-full h-full" style={{"display":"block"}}>
+<canvas id="shader-canvas-ANIMATION_10" style={{"display":"block","width":"100%","height":"100%"}}></canvas>
+
+</div>
+{/*  STITCH_SHADER_END:ANIMATION_10  */}
+
+    </>
+  );
+}
