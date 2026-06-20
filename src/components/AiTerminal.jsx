@@ -9,7 +9,7 @@ const GATE_KNOWLEDGE = {
   'XNOR': 'XNOR GATE: Inverse of XOR. Outputs 1 if inputs are the SAME.'
 };
 
-const HINTS = {
+const LOGIC_HINTS = {
   1: 'Basic AND logic. Output is 0 if any input is 0.',
   2: 'Basic OR logic. Output is 1 if any input is 1.',
   3: 'Both are 1, target is 1. Standard OR or AND applies.',
@@ -31,7 +31,7 @@ export default function AiTerminal({ contextualState, gameState }) {
   
   const messagesEndRef = useRef(null);
 
-  const safeContext = contextualState || { tier: 'UNKNOWN', level: 0, allowed: [] };
+  const safeContext = contextualState || { tier: 'UNKNOWN', level: 0, allowed: [], module: 'LOGIC' };
   const safeUnlocked = (gameState && gameState.unlockedGates) ? gameState.unlockedGates : [];
 
   const scrollToBottom = () => {
@@ -48,10 +48,16 @@ export default function AiTerminal({ contextualState, gameState }) {
     setMessages(prev => [...prev, { sender, text }]);
   };
 
+  const getHint = () => {
+    if (safeContext.module === 'MEMORY') {
+      return `MEMORY MODULE: Expected sequence length is ${safeContext.sequenceLength} bits. Chunk the binary string into blocks of 3 for easier retention.`;
+    }
+    return LOGIC_HINTS[safeContext.level] || 'No hint available for current state.';
+  };
+
   const handleHint = () => {
     addMessage('USER', '> GIVE HINT');
-    const hint = HINTS[safeContext.level] || 'No hint available for current state.';
-    setTimeout(() => addMessage('AI', hint), 500);
+    setTimeout(() => addMessage('AI', getHint()), 500);
   };
 
   const handleExplain = (gate) => {
@@ -70,7 +76,7 @@ export default function AiTerminal({ contextualState, gameState }) {
       const cmd = inputValue.toUpperCase().trim();
       setTimeout(() => {
         if (cmd === 'HINT') {
-          addMessage('AI', HINTS[safeContext.level] || 'No hint available.');
+          addMessage('AI', getHint());
         } else if (cmd.startsWith('EXPLAIN ')) {
           const gate = cmd.replace('EXPLAIN ', '').trim();
           if (GATE_KNOWLEDGE[gate]) {
@@ -112,7 +118,7 @@ export default function AiTerminal({ contextualState, gameState }) {
         </div>
         
         <div className="p-4 border-t-2 border-terminal-green flex flex-col gap-2 shrink-0 bg-surface">
-          {safeContext.allowed.length > 0 && (
+          {safeContext.allowed && safeContext.allowed.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
               {safeContext.allowed.map(gate => (
                 <button 

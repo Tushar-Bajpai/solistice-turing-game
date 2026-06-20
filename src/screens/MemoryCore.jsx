@@ -1,179 +1,399 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import SystemSidebar from '../components/SystemSidebar';
 import AiTerminal from '../components/AiTerminal';
+import { animate } from 'animejs';
 
-export default function MemoryCore({ setCurrentScreen, currentScreen, gameState }) {
+const MEMORY_TIERS = [
+  { levelMax: 3, name: 'ALPHA_ARCHIVE', lengthMin: 3, lengthMax: 4 },
+  { levelMax: 7, name: 'BETA_ARCHIVE', lengthMin: 5, lengthMax: 6 },
+  { levelMax: 10, name: 'OMEGA_ARCHIVE', lengthMin: 7, lengthMax: 8 }
+];
+
+function generateSequence(length) {
+  let seq = '';
+  for (let i = 0; i < length; i++) {
+    seq += Math.random() > 0.5 ? '1' : '0';
+  }
+  return seq;
+}
+
+export default function MemoryCore({ setCurrentScreen, currentScreen, gameState, setGameState, addSystemLog, systemLogs, updateProgress }) {
+  const safeGameState = gameState || { 
+    lightRestoration: 0, 
+    corruptionLevel: 92, 
+    memoryComplete: false, 
+    memoryLevel: 0, 
+    memoryCoreHealth: 0 
+  };
+  
+  const safeSystemLogs = systemLogs || [];
+  
+  const [phase, setPhase] = useState('INIT'); // INIT, MEMORIZE, RECONSTRUCT, SUCCESS
+  const [targetSequence, setTargetSequence] = useState('');
+  const [playerInput, setPlayerInput] = useState('');
+  const [attempts, setAttempts] = useState(3);
+  const [showFailure, setShowFailure] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  const displayContainerRef = useRef(null);
+  const timerBarRef = useRef(null);
+  const failureOverlayRef = useRef(null);
+  const successContainerRef = useRef(null);
+  
+  const currentLevel = Math.min((safeGameState.memoryLevel || 0) + 1, 10);
+  const currentTier = MEMORY_TIERS.find(t => currentLevel <= t.levelMax) || MEMORY_TIERS[2];
+  
+  // Base time of 1500ms, decreases by 100ms each level. Level 10 = 600ms!
+  const currentDisplayMs = Math.max(500, 1500 - ((currentLevel - 1) * 100));
+
+  // Expose context for AiTerminal
+  const terminalContext = {
+    tier: currentTier.name,
+    level: currentLevel,
+    sequenceLength: targetSequence.length,
+    module: 'MEMORY'
+  };
+
+  const startLevel = () => {
+    // Generate new sequence
+    const length = Math.floor(Math.random() * (currentTier.lengthMax - currentTier.lengthMin + 1)) + currentTier.lengthMin;
+    const seq = generateSequence(length);
+    setTargetSequence(seq);
+    setPlayerInput('');
+    setPhase('MEMORIZE');
+  };
+
+  // Auto-start on mount or level change
   useEffect(() => {
-    /* 
-    Extracted Scripts from original HTML:
+    if (!safeGameState.memoryComplete && phase === 'INIT') {
+      startLevel();
+    }
+  }, [safeGameState.memoryLevel, safeGameState.memoryComplete, phase]);
+
+  // Handle Memorize Phase Timer
+  useEffect(() => {
+    if (phase === 'MEMORIZE') {
+      if (timerBarRef.current) {
+        animate(timerBarRef.current, {
+          width: ['100%', '0%'],
+          duration: currentDisplayMs,
+          ease: 'linear'
+        });
+      }
+      
+      const timeoutId = setTimeout(() => {
+        setPhase('RECONSTRUCT');
+      }, currentDisplayMs);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [phase, currentDisplayMs]);
+
+  const handleInput = (bit) => {
+    if (phase !== 'RECONSTRUCT' || safeGameState.memoryComplete || showFailure) return;
+
+    const newInput = playerInput + bit;
+    setPlayerInput(newInput);
+
+    if (newInput.length === targetSequence.length) {
+      if (newInput === targetSequence) {
+        handleSuccess();
+      } else {
+        handleError();
+      }
+    }
+  };
+
+  const handleSuccess = () => {
+    setPhase('SUCCESS');
     
-        // Typing effect for Gemini
-        const typingElement = document.querySelector('.typing-text');
-        if (typingElement) {
-            const text = typingElement.innerText;
-            typingElement.innerText = '';
-            let i = 0;
-            const type = () => {
-                if (i < text.length) {
-                    typingElement.innerText += text.charAt(i);
-                    i++;
-                    setTimeout(type, 30);
-                }
-            };
-            type();
+    if (displayContainerRef.current) {
+      animate(displayContainerRef.current, {
+        scale: [1, 1.05, 1],
+        boxShadow: ['0 0 0px #00FF66', '0 0 30px #00FF66', '0 0 0px #00FF66'],
+        duration: 500,
+        ease: 'outElastic(1, .8)'
+      });
+    }
+
+    if (addSystemLog) addSystemLog(`[SYS] SEQUENCE ${currentLevel} VERIFIED`);
+
+    const isFinalStage = currentLevel >= 10;
+
+    if (setGameState) {
+      setGameState(prev => {
+        let healthIncrease = 10;
+        let lightIncrease = 2.5;
+        let corruptionDecrease = 2.3;
+        
+        if (isFinalStage && !prev.memoryComplete) {
+          healthIncrease = 100 - prev.memoryCoreHealth;
+          // Global reward handled by updateProgress, so we don't apply it locally
         }
 
-        // Simple binary flicker effect
-        setInterval(() => {
-            const state = document.querySelector('.binary-unit.animate-pulse');
-            if (state) {
-                state.style.opacity = Math.random() > 0.5 ? '1' : '0.5';
-            }
-        }, 150);
-    
+        return {
+          ...prev,
+          memoryLevel: isFinalStage ? prev.memoryLevel : prev.memoryLevel + 1,
+          memoryCoreHealth: Math.min(100, (prev.memoryCoreHealth || 0) + healthIncrease),
+          lightRestoration: isFinalStage ? prev.lightRestoration : Math.min(100, prev.lightRestoration + lightIncrease),
+          corruptionLevel: isFinalStage ? prev.corruptionLevel : Math.max(0, prev.corruptionLevel - corruptionDecrease),
+          memoryComplete: isFinalStage ? true : prev.memoryComplete
+        };
+      });
+    }
 
-    */
-  }, []);
+    setTimeout(() => {
+      if (isFinalStage) {
+        if (updateProgress) updateProgress('memory', false);
+      } else {
+        setAttempts(3);
+        setPhase('INIT');
+      }
+    }, 1500);
+  };
+
+  const handleError = () => {
+    if (displayContainerRef.current) {
+      animate(displayContainerRef.current, {
+        translateX: [
+          { to: -15, duration: 50 },
+          { to: 15, duration: 50 },
+          { to: -15, duration: 50 },
+          { to: 15, duration: 50 },
+          { to: 0, duration: 50 }
+        ],
+        ease: 'inOutQuad'
+      });
+    }
+
+    setAttempts(prev => {
+      const next = prev - 1;
+      if (next <= 0) {
+        setTimeout(() => {
+          setShowFailure(true);
+          if (failureOverlayRef.current) {
+            animate(failureOverlayRef.current, {
+              opacity: [0, 1],
+              duration: 200,
+              ease: 'linear'
+            });
+          }
+        }, 500);
+      } else {
+        setTimeout(() => setPlayerInput(''), 600); // clear input to try again
+      }
+      return next;
+    });
+  };
+
+  const handleRestartLevel = () => {
+    setAttempts(3);
+    setShowFailure(false);
+    if (addSystemLog) addSystemLog(`[SYS] LEVEL ${currentLevel.toString().padStart(2, '0')} RESTARTED`);
+    
+    animate('.flicker-layer', {
+      opacity: [0, 1],
+      duration: 300,
+      ease: 'linear'
+    });
+    
+    startLevel();
+  };
+
+  const executeResetCore = () => {
+    if (setGameState) {
+      setGameState(prev => {
+        const wasComplete = prev.modules?.memory || prev.memoryComplete;
+        return {
+          ...prev,
+          memoryLevel: 0,
+          memoryCoreHealth: 0,
+          memoryComplete: false,
+          modules: { ...(prev.modules || {}), memory: false },
+          lightRestoration: wasComplete ? Math.max(0, prev.lightRestoration - 25) : prev.lightRestoration,
+          corruptionLevel: wasComplete ? Math.min(92, prev.corruptionLevel + 23) : prev.corruptionLevel
+        };
+      });
+    }
+    setAttempts(3);
+    setShowFailure(false);
+    setShowResetConfirm(false);
+    setPhase('INIT');
+    if (addSystemLog) addSystemLog(`[SYS] MEMORY CORE RESET`);
+    
+    animate('.flicker-layer', {
+      opacity: [0, 1, 0, 1],
+      duration: 500,
+      ease: 'steps(4)'
+    });
+  };
+
+  useEffect(() => {
+    if (safeGameState.memoryComplete && successContainerRef.current) {
+      animate(successContainerRef.current, {
+        opacity: [0, 1],
+        translateY: [20, 0],
+        duration: 1000,
+        ease: 'outExpo'
+      });
+    }
+  }, [safeGameState.memoryComplete]);
 
   return (
     <>
-      
-<div className="crt-overlay"></div>
-<div className="scanline"></div>
-<div className="flex flex-col h-screen p-gutter gap-gutter flicker-layer">
-{/*  Top Navigation Bar (Shared Component)  */}
-<header className="w-full flex justify-between items-center py-unit terminal-border border-b-2 border-terminal-green bg-surface px-gutter shrink-0">
-<div className="font-headline-lg text-[24px] text-terminal-green uppercase tracking-widest">SOLSTICE://TURING</div>
+      <div className="crt-overlay"></div>
+      <div className="scanline"></div>
+      <div className="flex flex-col h-screen p-gutter gap-gutter flicker-layer">
+        
+        <header className="w-full flex justify-between items-center py-unit terminal-border border-b-2 border-terminal-green bg-surface px-gutter shrink-0">
+          <div className="font-headline-lg text-headline-lg text-terminal-green uppercase tracking-tighter phosphor-glow">
+              SOLSTICE://TURING
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
+            <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">settings</span>
+          </div>
+        </header>
 
-<div className="flex gap-4">
-<span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">settings</span>
-<span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
-</div>
-</header>
-<main className="flex-grow flex gap-gutter overflow-hidden h-full">
-{/*  Left Sidebar: Status & Restoration  */}
-<SystemSidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} gameState={gameState} />
-{/*  Center Panel: The Puzzle Core  */}
-<section className="flex-1 flex flex-col gap-4">
-<div className="pixel-border bg-panel-gray p-4 flex flex-col relative h-full">
-{/*  Header  */}
-<div className="flex justify-between items-center mb-6 border-b-2 border-terminal-green pb-2">
-<div>
-<h1 className="font-headline-md text-[20px] text-terminal-green">MEMORY CORE // MODULE_02</h1>
-<p className="font-body-md text-soft-green opacity-80 mt-1">FLIP-FLOP CIRCUIT SYNCHRONIZATION</p>
-</div>
-<div className="text-right">
-<div className="font-label-caps text-terminal-green">MODULE_STATE: <span className="text-solstice-gold animate-pulse">SYNC_REQUIRED</span></div>
-<div className="font-code-sm text-soft-green opacity-50">ADDR: 0x4F_2A_99</div>
-</div>
-</div>
-{/*  Main Puzzle Area  */}
-<div className="flex-1 flex flex-col items-center justify-center gap-12 py-8 border border-terminal-green/20 relative overflow-hidden">
-{/*  Background Shader for Atmosphere  */}
+        <main className="flex-grow flex gap-gutter overflow-hidden h-full">
+          <SystemSidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} gameState={safeGameState} />
+          
+          <section className="flex-grow flex flex-col terminal-border bg-panel-gray overflow-hidden">
+            <div className="bg-terminal-green text-surface px-4 py-2 flex justify-between items-center shrink-0">
+              <h2 className="font-headline-md text-headline-md text-sm">MEMORY CORE // ARCHIVE_RESTORE</h2>
+              <span className="font-label-caps text-label-caps">
+                {safeGameState.memoryComplete ? 'STATUS: RESTORED' : 'STATUS: CORRUPTED'}
+              </span>
+            </div>
+            
+            <div className="flex-grow relative p-gutter flex flex-col items-center justify-center gap-6">
+              
+              {showFailure && (
+                <div ref={failureOverlayRef} className="absolute inset-4 z-50 bg-warning-red/90 flex flex-col items-center justify-center p-8 terminal-border border-warning-red backdrop-blur-sm">
+                  <h2 className="text-6xl font-headline-lg text-black mb-4 glitch-text">SIGNAL FAILURE</h2>
+                  <p className="text-2xl font-headline-md text-black mb-8">ARCHIVE CORRUPTED</p>
+                  <button onClick={handleRestartLevel} className="px-6 py-3 border-4 border-black text-black font-headline-lg text-headline-lg hover:bg-black hover:text-warning-red transition-colors active:scale-95">
+                    RETRY LEVEL
+                  </button>
+                </div>
+              )}
 
-{/*  Circuit Visualization  */}
-<div className="relative w-full max-w-2xl flex flex-col items-center">
-<div className="flex items-center gap-12">
-{/*  Input Nodes  */}
-<div className="flex flex-col gap-4">
-<div className="flex items-center gap-2">
-<span className="font-label-caps text-soft-green">SET</span>
-<div className="w-12 h-0.5 bg-terminal-green"></div>
-</div>
-<div className="flex items-center gap-2">
-<span className="font-label-caps text-soft-green">RESET</span>
-<div className="w-12 h-0.5 bg-terminal-green"></div>
-</div>
-</div>
-{/*  Logic Gate (Flip-Flop)  */}
-<div className="pixel-border w-48 h-32 flex flex-col items-center justify-center bg-surface relative z-10">
-<span className="font-headline-md text-[14px] text-terminal-green mb-2">FLIP-FLOP</span>
-<div className="flex gap-4">
-<div className="flex flex-col items-center">
-<span className="font-code-sm text-soft-green">Q</span>
-<div className="w-8 h-8 border-2 border-solstice-gold gold-glow flex items-center justify-center font-body-lg">1</div>
-</div>
-<div className="flex flex-col items-center">
-<span className="font-code-sm text-soft-green">!Q</span>
-<div className="w-8 h-8 border-2 border-terminal-green opacity-50 flex items-center justify-center font-body-lg">0</div>
-</div>
-</div>
-<div className="absolute -right-12 top-1/2 -translate-y-1/2 w-12 h-0.5 bg-solstice-gold shadow-[0_0_10px_#FFD54A]"></div>
-</div>
-{/*  Output State  */}
-<div className="flex flex-col items-center gap-2">
-<span className="font-label-caps text-solstice-gold gold-glow">CURRENT STATE</span>
-<div className="w-16 h-16 pixel-border border-solstice-gold flex items-center justify-center bg-surface-container-low">
-<span className="font-headline-lg text-[32px] text-solstice-gold gold-glow">1</span>
-</div>
-</div>
-</div>
-{/*  Sequence Display  */}
-<div className="mt-16 flex flex-col items-center gap-4 bg-surface-container-low p-6 pixel-border border-soft-green/30">
-<span className="font-label-caps text-soft-green">INPUT SEQUENCE BUFFER</span>
-<div className="flex gap-4">
-<div className="binary-unit text-solstice-gold gold-glow font-body-lg bg-surface">1</div>
-<div className="binary-unit text-soft-green opacity-50 font-body-lg bg-surface">0</div>
-<div className="binary-unit text-solstice-gold gold-glow font-body-lg bg-surface">1</div>
-<div className="binary-unit text-solstice-gold gold-glow font-body-lg bg-surface">1</div>
-<div className="flex items-center mx-2">
-<span className="material-symbols-outlined text-terminal-green animate-pulse">arrow_forward</span>
-</div>
-<div className="binary-unit border-dashed border-soft-green text-soft-green animate-pulse font-body-lg">?</div>
-</div>
-</div>
-</div>
-</div>
-{/*  Interaction Footer  */}
-<div className="mt-4 flex flex-col items-center gap-4">
-<p className="font-body-lg text-soft-green text-center">Predict the final state of the circuit after the input sequence is processed.</p>
-<div className="flex gap-6 mb-2">
-<button className="w-20 h-20 pixel-border border-terminal-green font-headline-lg text-[32px] text-terminal-green hover:bg-terminal-green hover:text-black transition-none active:scale-95 active:ring-2 active:ring-solstice-gold group">
-                            0
-                        </button>
-<button className="w-20 h-20 pixel-border border-solstice-gold font-headline-lg text-[32px] text-solstice-gold gold-glow hover:bg-solstice-gold hover:text-black transition-none active:scale-95 active:ring-2 active:ring-white">
-                            1
-                        </button>
-</div>
-<div className="font-code-sm text-soft-green/50 italic">[INPUT REQUIRED: SELECT BIT TO COMMIT STATE]</div>
-</div>
-</div>
-</section>
-{/*  Right AI Terminal (Gemini)  */}
-<aside className="w-80 flex flex-col gap-4">
-<div className="terminal-border bg-panel-gray flex-1 flex flex-col overflow-hidden">
-<AiTerminal />
-</div>
-{/*  Asset Preview / Identity Frame  */}
-<div className="pixel-border h-48 bg-panel-gray overflow-hidden relative">
-<div className="absolute top-2 left-2 z-10 bg-black/80 px-2 font-code-sm text-terminal-green">FRAG_ID: 1912-A</div>
-<div className="w-full h-full bg-cover bg-center grayscale contrast-125 brightness-75" data-alt="Turing portrait" style={{backgroundImage: "url('https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80')"}}></div>
-<div className="absolute inset-0 border-2 border-terminal-green/20 pointer-events-none"></div>
-</div>
-</aside>
-</main>
-{/*  Bottom System Logs  */}
-<footer className="terminal-border bg-surface shrink-0 px-6 py-2 flex justify-between items-center z-50 border-t-2 border-terminal-green">
-<div className="flex gap-8 items-center h-full">
-<div className="font-code-sm text-soft-green opacity-60 flex gap-4">
-<span className="text-terminal-green">[12:44:02]</span>
-<span>SYNC_MODULE_02: WAITING_FOR_USER_INPUT...</span>
-</div>
-<div className="font-code-sm text-soft-green opacity-60 flex gap-4">
-<span className="text-terminal-green">[12:44:05]</span>
-<span className="text-solstice-gold">MEMORY_STATE_STORED: ADDR_0x4F</span>
-</div>
-</div>
-<div className="flex gap-6">
-<a className="font-code-sm text-soft-green opacity-60 hover:text-terminal-green uppercase" href="#">REBOOT</a>
-<a className="font-code-sm text-soft-green opacity-60 hover:text-terminal-green uppercase" href="#">DUMP</a>
-<a className="font-code-sm text-soft-green opacity-60 hover:text-terminal-green uppercase" href="#">HELP</a>
-</div>
-<div className="font-code-sm text-soft-green opacity-60">
-            [EST 1954] - TURING ARCHIVE RECOVERY PROTOCOL
-        </div>
-</footer>
-</div>
+              {showResetConfirm && (
+                <div className="absolute inset-4 z-50 bg-black/95 flex flex-col items-center justify-center p-8 terminal-border border-warning-red">
+                  <h2 className="text-4xl font-headline-lg text-warning-red mb-4">WARNING</h2>
+                  <p className="text-xl font-code-sm text-soft-green mb-8 text-center max-w-md">All Memory Core progress will be lost. Logic and Cipher cores will remain intact.</p>
+                  <div className="flex gap-8">
+                    <button onClick={executeResetCore} className="px-6 py-3 border-2 border-warning-red text-warning-red font-headline-lg text-headline-lg hover:bg-warning-red hover:text-black transition-colors">YES</button>
+                    <button onClick={() => setShowResetConfirm(false)} className="px-6 py-3 border-2 border-terminal-green text-terminal-green font-headline-lg text-headline-lg hover:bg-terminal-green hover:text-black transition-colors">NO</button>
+                  </div>
+                </div>
+              )}
+
+              {!safeGameState.memoryComplete && (
+                <div className="w-full max-w-2xl flex justify-between items-start mb-4 border-b border-terminal-green/30 pb-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-terminal-green font-headline-md text-headline-md">{currentTier.name}</span>
+                    <span className="text-soft-green font-label-caps text-label-caps">SEQUENCE RECONSTRUCTION</span>
+                    <span className={`font-label-caps text-label-caps ${attempts === 1 ? 'text-warning-red animate-pulse' : 'text-terminal-green'}`}>
+                      ATTEMPTS REMAINING: {attempts}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-solstice-gold font-headline-md text-headline-md">LEVEL {currentLevel}/10</span>
+                    <span className="text-soft-green font-label-caps text-label-caps mb-2">CORE HEALTH: {safeGameState.memoryCoreHealth || 0}%</span>
+                    <div className="flex gap-2">
+                      <button onClick={handleRestartLevel} className="px-2 py-1 text-[10px] font-code-sm border border-terminal-green text-terminal-green hover:bg-terminal-green hover:text-black transition-colors">RESTART LEVEL</button>
+                      <button onClick={() => setShowResetConfirm(true)} className="px-2 py-1 text-[10px] font-code-sm border border-warning-red text-warning-red hover:bg-warning-red hover:text-black transition-colors">RESET MEMORY CORE</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {safeGameState.memoryComplete ? (
+                <div ref={successContainerRef} className="w-full max-w-2xl terminal-border p-12 bg-surface-container relative flex flex-col items-center justify-center text-center gap-6">
+                  <div className="w-24 h-24 rounded-full border-4 border-solstice-gold flex items-center justify-center animate-[pulse_2s_infinite]">
+                    <span className="material-symbols-outlined text-6xl text-solstice-gold">done</span>
+                  </div>
+                  <h3 className="font-headline-lg text-headline-lg text-solstice-gold tracking-widest">MEMORY CORE RESTORED</h3>
+                  <div className="flex flex-col gap-2 font-code-sm text-code-sm text-terminal-green uppercase">
+                    <p>Archive recovery complete.</p>
+                    <p className="text-solstice-gold">LIGHT RESTORATION +25%</p>
+                    <p className="text-soft-green">CORRUPTION REDUCED</p>
+                  </div>
+                  <div className="flex gap-4 mt-8">
+                    <button onClick={() => setCurrentScreen('MainHub')} className="px-6 py-2 border-2 border-terminal-green text-terminal-green font-headline-md text-headline-md hover:bg-terminal-green hover:text-black transition-colors">
+                      RETURN TO HUB
+                    </button>
+                    <button onClick={() => setShowResetConfirm(true)} className="px-6 py-2 border-2 border-warning-red text-warning-red font-headline-md text-headline-md hover:bg-warning-red hover:text-black transition-colors">
+                      RESET MEMORY CORE
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full max-w-2xl terminal-border p-8 bg-surface-container relative flex flex-col items-center gap-8">
+                  <div className="absolute -top-3 left-6 bg-surface px-2 text-terminal-green font-code-sm uppercase">
+                    {phase === 'MEMORIZE' ? 'MEMORIZE SEQUENCE' : phase === 'SUCCESS' ? 'SEQUENCE VERIFIED' : 'RECONSTRUCT SEQUENCE'}
+                  </div>
+
+                  {/* Display Area */}
+                  <div ref={displayContainerRef} className={`w-full h-32 terminal-border bg-black flex items-center justify-center relative ${phase === 'MEMORIZE' ? 'border-solstice-gold' : 'border-terminal-green'}`}>
+                    {phase === 'MEMORIZE' ? (
+                      <span className="text-4xl font-headline-lg text-solstice-gold tracking-[1em] ml-[1em] animate-[pulse_0.3s_ease-in-out_infinite] opacity-80 mix-blend-screen">
+                        {targetSequence}
+                      </span>
+                    ) : (
+                      <div className="flex gap-4">
+                        {Array.from({ length: targetSequence.length }).map((_, i) => (
+                          <div key={i} className="w-12 h-16 border-b-4 border-terminal-green/50 flex items-center justify-center text-4xl font-headline-lg text-terminal-green">
+                            {playerInput[i] !== undefined ? playerInput[i] : ''}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {phase === 'MEMORIZE' && (
+                      <div className="absolute bottom-0 left-0 h-1 bg-solstice-gold w-full" ref={timerBarRef}></div>
+                    )}
+                  </div>
+
+                  {/* Input Controls */}
+                  <div className="flex gap-8">
+                    <button 
+                      onClick={() => handleInput('0')}
+                      disabled={phase !== 'RECONSTRUCT'}
+                      className={`w-24 h-24 border-2 font-headline-lg text-4xl transition-all ${phase === 'RECONSTRUCT' ? 'border-terminal-green text-terminal-green hover:bg-terminal-green hover:text-black active:scale-95' : 'border-terminal-green/20 text-terminal-green/20 cursor-not-allowed'}`}
+                    >
+                      0
+                    </button>
+                    <button 
+                      onClick={() => handleInput('1')}
+                      disabled={phase !== 'RECONSTRUCT'}
+                      className={`w-24 h-24 border-2 font-headline-lg text-4xl transition-all ${phase === 'RECONSTRUCT' ? 'border-terminal-green text-terminal-green hover:bg-terminal-green hover:text-black active:scale-95' : 'border-terminal-green/20 text-terminal-green/20 cursor-not-allowed'}`}
+                    >
+                      1
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* AI Terminal Context Passed In */}
+          <AiTerminal contextualState={terminalContext} gameState={safeGameState} />
+        </main>
+
+        <footer className="h-32 terminal-border bg-surface shrink-0 p-4 font-code-sm text-code-sm flex flex-col gap-1 overflow-hidden relative">
+          <div className="absolute top-0 right-4 px-2 bg-surface text-terminal-green opacity-50 text-[10px] uppercase font-headline-md">System Logs</div>
+          <div className="flex flex-col gap-1 overflow-y-auto custom-scrollbar" id="log-container">
+            {safeSystemLogs.map((log, i) => (
+              <div key={i} className="flex gap-4">
+                <span className="text-soft-green opacity-50">[{new Date().toLocaleTimeString()}]</span>
+                <span className={log.includes('UNLOCKED') ? 'text-solstice-gold' : log.includes('[SYS]') ? 'text-warning-red' : 'text-terminal-green'}>{log}</span>
+              </div>
+            ))}
+          </div>
+        </footer>
+      </div>
     </>
   );
 }

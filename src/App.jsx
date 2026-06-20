@@ -33,6 +33,9 @@ function App() {
       logicLevel: 0,
       logicCoreHealth: 0,
       unlockedGates: [],
+      memoryComplete: false,
+      memoryLevel: 0,
+      memoryCoreHealth: 0,
       modules: { logic: false, memory: false, cipher: false, ai: false }
     };
   });
