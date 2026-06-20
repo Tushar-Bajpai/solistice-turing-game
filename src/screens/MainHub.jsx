@@ -1,18 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import SystemSidebar from '../components/SystemSidebar';
 import AiTerminal from '../components/AiTerminal';
+import { animate } from 'animejs';
 
-const PUZZLES = [
-  { a: 0, b: 0, target: 0 },
-  { a: 1, b: 0, target: 1 },
-  { a: 1, b: 1, target: 0 },
-  { a: 0, b: 1, target: 1 },
-  { a: 0, b: 0, target: 1 },
-  { a: 1, b: 1, target: 1 },
-  { a: 1, b: 0, target: 0 },
-  { a: 0, b: 1, target: 0 },
-  { a: 1, b: 1, target: 0 },
-  { a: 0, b: 0, target: 1 }
+export const LOGIC_TIERS = [
+  { levelMax: 3, name: 'ALPHA_TIER', brief: 'BASIC LOGIC PATHWAYS', allowed: ['AND', 'OR'] },
+  { levelMax: 6, name: 'BETA_TIER', brief: 'ADVANCED DIFFERENTIALS', allowed: ['AND', 'OR', 'XOR'] },
+  { levelMax: 9, name: 'GAMMA_TIER', brief: 'INVERTED LOGIC SYNTHESIS', allowed: ['AND', 'OR', 'XOR', 'NAND', 'NOR', 'XNOR'] },
+  { levelMax: 12, name: 'OMEGA_TIER', brief: 'COMPOUND RECONSTRUCTION', allowed: ['AND', 'OR', 'XOR', 'NAND', 'NOR', 'XNOR'] }
+];
+
+export const PUZZLES = [
+  // Tier 1 (Levels 1-3)
+  { level: 1, a: 0, b: 0, target: 0, solution: 'AND' },
+  { level: 2, a: 1, b: 0, target: 1, solution: 'OR' },
+  { level: 3, a: 1, b: 1, target: 1, solution: 'OR' },
+  // Tier 2 (Levels 4-6)
+  { level: 4, a: 0, b: 1, target: 1, solution: 'XOR' },
+  { level: 5, a: 1, b: 1, target: 0, solution: 'XOR' },
+  { level: 6, a: 1, b: 0, target: 1, solution: 'OR' },
+  // Tier 3 (Levels 7-9)
+  { level: 7, a: 1, b: 1, target: 0, solution: 'NAND' },
+  { level: 8, a: 0, b: 0, target: 1, solution: 'NOR' },
+  { level: 9, a: 1, b: 1, target: 1, solution: 'XNOR' },
+  // Tier 4 (Level 10 Boss) - Boss levels share the same UI but display differently
+  { level: 10, stage: 1, a: 1, b: 0, target: 0, solution: 'AND', instruction: 'PHASE 1/3: RESOLVE TO 0' },
+  { level: 10, stage: 2, a: 0, b: 1, target: 1, solution: 'OR', instruction: 'PHASE 2/3: RESOLVE TO 1' },
+  { level: 10, stage: 3, a: 0, b: 1, target: 1, solution: 'XOR', instruction: 'PHASE 3/3: SYNTHESIZE PREVIOUS PATHWAYS' }
 ];
 
 const GATES = ['AND', 'OR', 'XOR', 'NAND', 'NOR', 'XNOR'];
@@ -30,16 +44,86 @@ function evaluateGate(gate, a, b) {
 }
 
 export default function MainHub({ setCurrentScreen, currentScreen, gameState, setGameState, addSystemLog, systemLogs, updateProgress }) {
-  const [puzzleIndex, setPuzzleIndex] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedGate, setSelectedGate] = useState(null);
+  const [attempts, setAttempts] = useState(3);
+  const [showFailure, setShowFailure] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  
+  const gateRef = useRef(null);
+  const successContainerRef = useRef(null);
+  const failureOverlayRef = useRef(null);
+  const resetOverlayRef = useRef(null);
 
-  const safeGameState = gameState || { lightRestoration: 0, corruptionLevel: 92, logicComplete: false };
+  const safeGameState = gameState || { 
+    lightRestoration: 0, 
+    corruptionLevel: 92, 
+    logicComplete: false, 
+    logicLevel: 0, 
+    logicCoreHealth: 0, 
+    unlockedGates: [] 
+  };
+  
   const safeSystemLogs = systemLogs || [];
+  const puzzleIndex = Math.min(safeGameState.logicLevel || 0, PUZZLES.length - 1);
   const currentPuzzle = PUZZLES[puzzleIndex];
+  
+  const currentTier = LOGIC_TIERS.find(t => currentPuzzle.level <= t.levelMax) || LOGIC_TIERS[3];
+  
+  const terminalContext = {
+    tier: currentTier.name,
+    level: currentPuzzle.level,
+    allowed: currentTier.allowed
+  };
+
+  const handleRestartLevel = () => {
+    setAttempts(3);
+    setSelectedGate(null);
+    setShowFailure(false);
+    if (addSystemLog) addSystemLog(`[SYS] LEVEL ${currentPuzzle.level.toString().padStart(2, '0')} RESTARTED`);
+    
+    // flash animation
+    if (gateRef.current) {
+      animate(gateRef.current, {
+        opacity: [0, 1],
+        duration: 300,
+        ease: 'linear'
+      });
+    }
+  };
+
+  const executeResetCore = () => {
+    if (setGameState) {
+      setGameState(prev => {
+        const wasComplete = prev.modules?.logic || prev.logicComplete;
+        return {
+          ...prev,
+          logicLevel: 0,
+          logicCoreHealth: 0,
+          logicComplete: false,
+          modules: { ...(prev.modules || {}), logic: false },
+          lightRestoration: wasComplete ? Math.max(0, prev.lightRestoration - 25) : prev.lightRestoration,
+          corruptionLevel: wasComplete ? Math.min(92, prev.corruptionLevel + 23) : prev.corruptionLevel
+        };
+      });
+    }
+    setAttempts(3);
+    setSelectedGate(null);
+    setShowFailure(false);
+    setShowResetConfirm(false);
+    setShowSuccess(false);
+    if (addSystemLog) addSystemLog(`[SYS] LOGIC CORE RESET`);
+    
+    // glitch reset animation
+    animate('.flicker-layer', {
+      opacity: [0, 1, 0, 1],
+      duration: 500,
+      ease: 'steps(4)'
+    });
+  };
 
   const handleGateSelection = (gate) => {
-    if (safeGameState.logicComplete || showSuccess) return;
+    if (safeGameState.logicComplete || showSuccess || showFailure) return;
     
     setSelectedGate(gate);
     const result = evaluateGate(gate, currentPuzzle.a, currentPuzzle.b);
@@ -47,249 +131,269 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
     if (result === currentPuzzle.target) {
       setShowSuccess(true);
       
-      // Incrementally update global state here
+      if (gateRef.current) {
+        animate(gateRef.current, {
+          scale: [1, 1.1, 1],
+          boxShadow: ['0 0 0px #00FF66', '0 0 20px #00FF66', '0 0 0px #00FF66'],
+          duration: 500,
+          ease: 'outElastic(1, .8)'
+        });
+      }
+
+      const isNewGate = !(safeGameState.unlockedGates || []).includes(gate);
+      const newUnlockedGates = isNewGate ? [...(safeGameState.unlockedGates || []), gate] : safeGameState.unlockedGates;
+
+      if (isNewGate && addSystemLog) {
+        addSystemLog(`ARCHIVE UNLOCKED: KNOWLEDGE LOG - ${gate} GATE`);
+      }
+
+      const isFinalStage = puzzleIndex + 1 >= PUZZLES.length;
+
       if (setGameState) {
-        setGameState(prev => ({
-          ...prev,
-          lightRestoration: prev.lightRestoration + 2.5,
-          corruptionLevel: Math.max(0, prev.corruptionLevel - 2.3)
-        }));
+        setGameState(prev => {
+          let newLevel = prev.logicLevel + 1;
+          let healthIncrease = 10;
+          
+          if (isFinalStage && !prev.logicComplete) {
+            healthIncrease = 100 - prev.logicCoreHealth;
+          }
+
+          return {
+            ...prev,
+            logicLevel: newLevel,
+            logicCoreHealth: Math.min(100, (prev.logicCoreHealth || 0) + healthIncrease),
+            unlockedGates: newUnlockedGates,
+            logicComplete: isFinalStage ? true : prev.logicComplete
+          };
+        });
       }
 
       setTimeout(() => {
-        if (puzzleIndex + 1 >= PUZZLES.length) {
-          if (updateProgress) updateProgress('logic', true);
+        if (isFinalStage) {
+          if (updateProgress) updateProgress('logic', false); // false to apply the 25% reward globally
         } else {
-          setPuzzleIndex(prev => prev + 1);
+          setAttempts(3); // Reset attempts on successful level transition
         }
         setShowSuccess(false);
         setSelectedGate(null);
       }, 1000);
     } else {
+      // Error handling
+      if (gateRef.current) {
+        animate(gateRef.current, {
+          translateX: [
+            { to: -10, duration: 50 },
+            { to: 10, duration: 50 },
+            { to: -10, duration: 50 },
+            { to: 10, duration: 50 },
+            { to: 0, duration: 50 }
+          ],
+          ease: 'inOutQuad'
+        });
+      }
+      
+      setAttempts(prev => {
+        const next = prev - 1;
+        if (next <= 0) {
+          setTimeout(() => {
+            setShowFailure(true);
+            if (failureOverlayRef.current) {
+              animate(failureOverlayRef.current, {
+                opacity: [0, 1],
+                duration: 200,
+                ease: 'linear'
+              });
+            }
+          }, 500);
+        }
+        return next;
+      });
+
       setTimeout(() => setSelectedGate(null), 500);
     }
   };
+
   useEffect(() => {
-    /* 
-    Extracted Scripts from original HTML:
-    
-        // Simple Typing Effect for AI Terminal
-        const aiTyping = document.getElementById('ai-typing');
-        const phrases = [
-            "SCANNING_LOGIC_PATHWAYS...",
-            "CORRUPTION_THRESHOLD_CRITICAL",
-            "AWAITING_INPUT_SIGNAL...",
-            "QUERY SYSTEM CORE..."
-        ];
-        let phraseIndex = 0;
-        let charIndex = 0;
-        let isDeleting = false;
-
-        function type() {
-            const currentPhrase = phrases[phraseIndex];
-            if (isDeleting) {
-                aiTyping.textContent = currentPhrase.substring(0, charIndex--);
-            } else {
-                aiTyping.textContent = currentPhrase.substring(0, charIndex++);
-            }
-
-            if (!isDeleting && charIndex === currentPhrase.length + 1) {
-                setTimeout(() => isDeleting = true, 3000);
-            } else if (isDeleting && charIndex === 0) {
-                isDeleting = false;
-                phraseIndex = (phraseIndex + 1) % phrases.length;
-            }
-
-            const speed = isDeleting ? 30 : 60;
-            setTimeout(type, speed);
-        }
-
-        // Random Log Generation
-        const logs = [
-            "BUFFER OVERFLOW IN MEMORY_BANK_4",
-            "DATA INTEGRITY CHECK: FAILED",
-            "RESTORING SYSTEM ASSETS...",
-            "PHOSPHOR DECAY DETECTED",
-            "ENCRYPTION KEY SYNCED",
-            "ALERT: UNAUTHORIZED ACCESS ATTEMPT",
-            "KERNEL PANIC AVERTED"
-        ];
-        const logContainer = document.getElementById('log-container');
-
-        function addLog() {
-            const time = new Date();
-            const timeStr = `[${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}:${time.getSeconds().toString().padStart(2, '0')}:${Math.floor(Math.random() * 99).toString().padStart(2, '0')}]`;
-            
-            const logEntry = document.createElement('div');
-            logEntry.className = 'flex gap-4';
-            const logText = logs[Math.floor(Math.random() * logs.length)];
-            const colorClass = Math.random() > 0.8 ? 'text-warning-red' : 'text-soft-green';
-            
-            logEntry.innerHTML = `<span className="text-soft-green opacity-50">${timeStr}</span><span className="${colorClass}">${logText}</span>`;
-            
-            logContainer.appendChild(logEntry);
-            if (logContainer.children.length > 5) {
-                logContainer.removeChild(logContainer.firstChild);
-            }
-            
-            setTimeout(addLog, 2000 + Math.random() * 3000);
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            type();
-            addLog();
-            
-            // Interaction Simulation
-            const buttons = document.querySelectorAll('button');
-            buttons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const ripple = document.createElement('div');
-                    ripple.className = 'fixed inset-0 pointer-events-none bg-terminal-green opacity-10';
-                    document.body.appendChild(ripple);
-                    setTimeout(() => ripple.remove(), 50);
-                });
-            });
-        });
-    
-
-    */
-  }, []);
+    if (safeGameState.logicComplete && successContainerRef.current) {
+      animate(successContainerRef.current, {
+        opacity: [0, 1],
+        translateY: [20, 0],
+        duration: 1000,
+        ease: 'outExpo'
+      });
+    }
+  }, [safeGameState.logicComplete]);
 
   return (
     <>
-      
-<div className="crt-overlay"></div>
-<div className="scanline"></div>
-<div className="flex flex-col h-screen p-gutter gap-gutter flicker-layer">
-{/*  TOP APP BAR  */}
-<header className="w-full flex justify-between items-center py-unit terminal-border border-b-2 border-terminal-green bg-surface px-gutter shrink-0">
-<div className="font-headline-lg text-headline-lg text-terminal-green uppercase tracking-tighter phosphor-glow">
-                SOLSTICE://TURING
+      <div className="crt-overlay"></div>
+      <div className="scanline"></div>
+      <div className="flex flex-col h-screen p-gutter gap-gutter flicker-layer">
+        <header className="w-full flex justify-between items-center py-unit terminal-border border-b-2 border-terminal-green bg-surface px-gutter shrink-0">
+          <div className="font-headline-lg text-headline-lg text-terminal-green uppercase tracking-tighter phosphor-glow">
+              SOLSTICE://TURING
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
+            <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">settings</span>
+          </div>
+        </header>
+
+        <main className="flex-grow flex gap-gutter overflow-hidden h-full">
+          <SystemSidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} gameState={safeGameState} />
+          
+          <section className="flex-grow flex flex-col terminal-border bg-panel-gray overflow-hidden">
+            <div className="bg-terminal-green text-surface px-4 py-2 flex justify-between items-center shrink-0">
+              <h2 className="font-headline-md text-headline-md text-sm">LOGIC CORE // MODULE_01</h2>
+              <span className="font-label-caps text-label-caps">
+                {safeGameState.logicComplete ? 'STATUS: RESTORED' : 'STATUS: CORRUPTED'}
+              </span>
             </div>
-<div className="flex items-center gap-4">
-<span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
-<span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">settings</span>
-</div>
-</header>
-{/*  MAIN DASHBOARD CONTENT  */}
-<main className="flex-grow flex gap-gutter overflow-hidden h-full">
-{/*  LEFT PANEL: SYSTEM STATUS  */}
-<SystemSidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} gameState={safeGameState} />
-{/*  CENTER PANEL: LOGIC CORE  */}
-<section className="flex-grow flex flex-col terminal-border bg-panel-gray overflow-hidden">
-<div className="bg-terminal-green text-surface px-4 py-2 flex justify-between items-center shrink-0">
-<h2 className="font-headline-md text-headline-md text-sm">LOGIC CORE // MODULE_01</h2>
-<span className="font-label-caps text-label-caps">STATUS: CORRUPTED</span>
-</div>
-<div className="flex-grow relative p-gutter flex flex-col items-center justify-center gap-12">
-{/*  Retro Puzzle Interface  */}
-{safeGameState.logicComplete ? (
-  <div className="w-full max-w-2xl terminal-border p-12 bg-surface-container relative flex flex-col items-center justify-center text-center gap-6">
-    <div className="w-24 h-24 rounded-full border-4 border-solstice-gold flex items-center justify-center animate-pulse">
-      <span className="material-symbols-outlined text-6xl text-solstice-gold">done</span>
-    </div>
-    <h3 className="font-headline-lg text-headline-lg text-solstice-gold tracking-widest">LOGIC CORE RESTORED</h3>
-    <p className="font-code-sm text-code-sm text-terminal-green uppercase">System heuristics successfully realigned. Power restored to Module 01.</p>
-  </div>
-) : (
-  <div className="w-full max-w-2xl terminal-border p-8 bg-surface-container relative">
-  <div className="absolute -top-3 left-6 bg-surface px-2 text-terminal-green font-code-sm uppercase">Binary Logic Reconstruction ({puzzleIndex + 1}/10)</div>
-  <div className="grid grid-cols-3 gap-8 items-center">
-  {/*  Inputs  */}
-  <div className="flex flex-col gap-8">
-  <div className="flex items-center gap-4">
-  <div className={`w-12 h-12 terminal-border flex items-center justify-center font-headline-lg ${currentPuzzle.a ? 'text-solstice-gold solstice-glow' : 'text-panel-gray opacity-30'}`}>{currentPuzzle.a}</div>
-  <div className="font-label-caps text-label-caps">INPUT A</div>
-  </div>
-  <div className="flex items-center gap-4">
-  <div className={`w-12 h-12 terminal-border flex items-center justify-center font-headline-lg ${currentPuzzle.b ? 'text-solstice-gold solstice-glow' : 'text-panel-gray opacity-30'}`}>{currentPuzzle.b}</div>
-  <div className="font-label-caps text-label-caps">INPUT B</div>
-  </div>
-  </div>
-  {/*  Gate Center  */}
-  <div className="flex flex-col items-center justify-center gap-4">
-  <div className={`w-24 h-24 terminal-border ${showSuccess ? 'border-terminal-green text-terminal-green' : selectedGate ? 'border-solstice-gold text-warning-red' : 'border-solstice-gold border-dashed text-solstice-gold'} flex items-center justify-center`}>
-    {showSuccess ? (
-      <span className="material-symbols-outlined text-4xl animate-bounce">check_circle</span>
-    ) : selectedGate ? (
-      <span className="font-headline-md text-xl">{selectedGate}</span>
-    ) : (
-      <span className="material-symbols-outlined text-4xl animate-pulse">question_mark</span>
-    )}
-  </div>
-  <div className="h-0.5 w-16 bg-terminal-green"></div>
-  </div>
-  {/*  Target Output  */}
-  <div className="flex flex-col items-center gap-4">
-  <div className={`w-16 h-16 terminal-border flex items-center justify-center ${showSuccess ? 'border-terminal-green text-terminal-green' : 'border-solstice-gold text-solstice-gold'}`}>
-  <span className={`font-headline-lg ${showSuccess ? 'phosphor-glow-green' : 'phosphor-glow'}`}>{currentPuzzle.target}</span>
-  </div>
-  <div className={`font-label-caps text-label-caps ${showSuccess ? 'text-terminal-green' : 'text-solstice-gold'}`}>TARGET</div>
-  </div>
-  </div>
-  <div className={`mt-12 text-center font-body-md ${showSuccess ? 'text-terminal-green' : selectedGate ? 'text-warning-red' : 'text-terminal-green animate-pulse'}`}>
-                              {showSuccess ? 'GATE ALIGNED. PROCEEDING...' : selectedGate ? 'INCORRECT GATE CONFIGURATION' : 'REPAIR LOGIC GATE TO RESTORE 25% LIGHT'}
-                          </div>
-  </div>
-)}
+            
+            <div className="flex-grow relative p-gutter flex flex-col items-center justify-center gap-6">
+              
+              {showFailure && (
+                <div ref={failureOverlayRef} className="absolute inset-4 z-50 bg-warning-red/90 flex flex-col items-center justify-center p-8 terminal-border border-warning-red backdrop-blur-sm">
+                  <h2 className="text-6xl font-headline-lg text-black mb-4 glitch-text">SIGNAL FAILURE</h2>
+                  <p className="text-2xl font-headline-md text-black mb-8">LEVEL CORRUPTED</p>
+                  <button onClick={handleRestartLevel} className="px-6 py-3 border-4 border-black text-black font-headline-lg text-headline-lg hover:bg-black hover:text-warning-red transition-colors active:scale-95">
+                    RETRY LEVEL
+                  </button>
+                </div>
+              )}
 
-{/*  Interaction Buttons  */}
-{!safeGameState.logicComplete && (
-<div className="flex flex-wrap justify-center gap-4 max-w-2xl">
-{GATES.map(gate => (
-  <button 
-    key={gate} 
-    onClick={() => handleGateSelection(gate)}
-    className={`px-8 py-3 terminal-border hover:bg-terminal-green hover:text-surface transition-all font-headline-md text-xs active:scale-95 ${selectedGate === gate && !showSuccess ? 'bg-warning-red text-surface border-warning-red' : ''}`}
-  >
-    {gate}
-  </button>
-))}
-</div>
-)}
-</div>
-</section>
-<section className="w-80 flex flex-col terminal-border bg-panel-gray h-full shrink-0">
-<AiTerminal />
-</section>
-</main>
-{/*  BOTTOM PANEL: SYSTEM LOGS  */}
-<footer className="h-32 terminal-border bg-surface shrink-0 p-4 font-code-sm text-code-sm flex flex-col gap-1 overflow-hidden relative">
-<div className="absolute top-0 right-4 px-2 bg-surface text-terminal-green opacity-50 text-[10px] uppercase font-headline-md">Live Stream logs</div>
-<div className="flex flex-col gap-1 overflow-y-auto" id="log-container">
-{safeSystemLogs.length > 0 ? (
-  safeSystemLogs.map((log, index) => (
-    <div key={index} className="flex gap-4">
-      <span className="text-soft-green opacity-50">[{new Date().toLocaleTimeString('en-US', { hour12: false })}]</span>
-      <span className="text-terminal-green">{log}</span>
-    </div>
-  ))
-) : (
-  <>
-    <div className="flex gap-4">
-    <span className="text-soft-green opacity-50">[08:42:15:23]</span>
-    <span className="text-warning-red">CORRUPTION DETECTED IN SECTOR 7...</span>
-    </div>
-    <div className="flex gap-4">
-    <span className="text-soft-green opacity-50">[08:42:16:01]</span>
-    <span className="text-soft-green">WAITING FOR INPUT...</span>
-    </div>
-    <div className="flex gap-4">
-    <span className="text-soft-green opacity-50">[08:42:17:88]</span>
-    <span className="text-terminal-green">LOGIC_GATE_STATUS: DISCONNECTED</span>
-    </div>
-    <div className="flex gap-4">
-    <span className="text-soft-green opacity-50">[08:42:19:42]</span>
-    <span className="text-solstice-gold">GOLD_CORE_HEURISTICS: OFFLINE</span>
-    </div>
-  </>
-)}
-</div>
-</footer>
-</div>
-{/*  AUDIO/VISUAL FEEDBACK SCRIPT  */}
+              {showResetConfirm && (
+                <div ref={resetOverlayRef} className="absolute inset-4 z-50 bg-black/95 flex flex-col items-center justify-center p-8 terminal-border border-warning-red">
+                  <h2 className="text-4xl font-headline-lg text-warning-red mb-4">WARNING</h2>
+                  <p className="text-xl font-code-sm text-soft-green mb-8 text-center max-w-md">All Logic Core progress will be lost. Memory and Cipher cores will remain intact.</p>
+                  <div className="flex gap-8">
+                    <button onClick={executeResetCore} className="px-6 py-3 border-2 border-warning-red text-warning-red font-headline-lg text-headline-lg hover:bg-warning-red hover:text-black transition-colors">YES</button>
+                    <button onClick={() => setShowResetConfirm(false)} className="px-6 py-3 border-2 border-terminal-green text-terminal-green font-headline-lg text-headline-lg hover:bg-terminal-green hover:text-black transition-colors">NO</button>
+                  </div>
+                </div>
+              )}
 
+              {/* Display Core State */}
+              {!safeGameState.logicComplete && (
+                <div className="w-full max-w-2xl flex justify-between items-start mb-4 border-b border-terminal-green/30 pb-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-terminal-green font-headline-md text-headline-md">{currentTier.name}</span>
+                    <span className="text-soft-green font-label-caps text-label-caps">{currentTier.brief}</span>
+                    <span className={`font-label-caps text-label-caps ${attempts === 1 ? 'text-warning-red animate-pulse' : 'text-terminal-green'}`}>
+                      ATTEMPTS REMAINING: {attempts}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-solstice-gold font-headline-md text-headline-md">LEVEL {currentPuzzle.level}/10</span>
+                    <span className="text-soft-green font-label-caps text-label-caps mb-2">CORE HEALTH: {safeGameState.logicCoreHealth || 0}%</span>
+                    <div className="flex gap-2">
+                      <button onClick={handleRestartLevel} className="px-2 py-1 text-[10px] font-code-sm border border-terminal-green text-terminal-green hover:bg-terminal-green hover:text-black transition-colors">RESTART LEVEL</button>
+                      <button onClick={() => setShowResetConfirm(true)} className="px-2 py-1 text-[10px] font-code-sm border border-warning-red text-warning-red hover:bg-warning-red hover:text-black transition-colors">RESET LOGIC CORE</button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
+              {safeGameState.logicComplete ? (
+                <div ref={successContainerRef} className="w-full max-w-2xl terminal-border p-12 bg-surface-container relative flex flex-col items-center justify-center text-center gap-6">
+                  <div className="w-24 h-24 rounded-full border-4 border-solstice-gold flex items-center justify-center animate-[pulse_2s_infinite]">
+                    <span className="material-symbols-outlined text-6xl text-solstice-gold">done</span>
+                  </div>
+                  <h3 className="font-headline-lg text-headline-lg text-solstice-gold tracking-widest">LOGIC CORE RESTORED</h3>
+                  <div className="flex flex-col gap-2 font-code-sm text-code-sm text-terminal-green uppercase">
+                    <p>System heuristics successfully realigned.</p>
+                    <p className="text-solstice-gold">LIGHT RESTORATION +25%</p>
+                    <p className="text-soft-green">CORRUPTION REDUCED</p>
+                  </div>
+                  <button onClick={() => setShowResetConfirm(true)} className="mt-8 px-6 py-2 border-2 border-warning-red text-warning-red font-headline-md text-headline-md hover:bg-warning-red hover:text-black transition-colors">
+                    RESET LOGIC CORE
+                  </button>
+                </div>
+              ) : (
+                <div className="w-full max-w-2xl terminal-border p-8 bg-surface-container relative">
+                  <div className="absolute -top-3 left-6 bg-surface px-2 text-terminal-green font-code-sm uppercase">
+                    {currentPuzzle.instruction ? currentPuzzle.instruction : `Binary Logic Reconstruction`}
+                  </div>
+                  <div className="grid grid-cols-3 gap-8 items-center">
+                    <div className="flex flex-col gap-8">
+                      <div className="flex items-center gap-4">
+                        <div className="font-label-caps text-label-caps text-soft-green">INPUT A</div>
+                        <div className="w-12 h-12 terminal-border bg-black flex items-center justify-center font-headline-lg text-headline-lg text-terminal-green glow-green">
+                          {currentPuzzle.a}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="font-label-caps text-label-caps text-soft-green">INPUT B</div>
+                        <div className="w-12 h-12 terminal-border bg-black flex items-center justify-center font-headline-lg text-headline-lg text-terminal-green glow-green">
+                          {currentPuzzle.b}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col items-center justify-center gap-2 relative">
+                      <div className="absolute top-1/2 -left-8 w-8 border-b-2 border-terminal-green border-dashed"></div>
+                      <div className="absolute top-1/2 -right-8 w-8 border-b-2 border-terminal-green border-dashed"></div>
+                      
+                      <div ref={gateRef} className="w-24 h-24 border-2 border-solstice-gold bg-black flex items-center justify-center relative overflow-hidden transition-colors">
+                        {selectedGate ? (
+                          <span className={`font-headline-lg text-headline-lg ${showSuccess ? 'text-solstice-gold' : 'text-warning-red'}`}>
+                            {selectedGate}
+                          </span>
+                        ) : (
+                          <span className="text-solstice-gold opacity-50 animate-pulse font-code-sm">INSERT GATE</span>
+                        )}
+                      </div>
+                      <div className="font-label-caps text-label-caps text-solstice-gold mt-2">LOGIC GATE</div>
+                    </div>
+                    
+                    <div className="flex flex-col items-end gap-4 relative">
+                      <div className="font-label-caps text-label-caps text-soft-green">TARGET OUTPUT</div>
+                      <div className="w-16 h-16 terminal-border bg-terminal-green/20 flex items-center justify-center font-headline-lg text-headline-lg text-terminal-green shadow-[inset_0_0_15px_rgba(0,255,102,0.3)]">
+                        {currentPuzzle.target}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-8 border-t border-terminal-green/30 pt-6">
+                    <div className="font-label-caps text-label-caps text-soft-green mb-4">AVAILABLE MODULES</div>
+                    <div className="flex gap-4 flex-wrap">
+                      {GATES.map((gate) => {
+                        const isAllowed = currentTier.allowed.includes(gate);
+                        if (!isAllowed) return null;
+                        return (
+                          <button
+                            key={gate}
+                            onClick={() => handleGateSelection(gate)}
+                            disabled={showSuccess || showFailure}
+                            className={`px-4 py-2 border-2 ${selectedGate === gate ? 'border-solstice-gold text-solstice-gold' : 'border-terminal-green text-terminal-green hover:bg-terminal-green hover:text-surface'} font-headline-md text-headline-md transition-all active:scale-95`}
+                          >
+                            {gate}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* AI Terminal Context Passed In */}
+          <AiTerminal contextualState={terminalContext} gameState={safeGameState} />
+        </main>
+
+        <footer className="h-32 terminal-border bg-surface shrink-0 p-4 font-code-sm text-code-sm flex flex-col gap-1 overflow-hidden relative">
+          <div className="absolute top-0 right-4 px-2 bg-surface text-terminal-green opacity-50 text-[10px] uppercase font-headline-md">System Logs</div>
+          <div className="flex flex-col gap-1 overflow-y-auto custom-scrollbar" id="log-container">
+            {safeSystemLogs.map((log, i) => (
+              <div key={i} className="flex gap-4">
+                <span className="text-soft-green opacity-50">[{new Date().toLocaleTimeString()}]</span>
+                <span className={log.includes('UNLOCKED') ? 'text-solstice-gold' : log.includes('[SYS]') ? 'text-warning-red' : 'text-terminal-green'}>{log}</span>
+              </div>
+            ))}
+          </div>
+        </footer>
+      </div>
     </>
   );
 }

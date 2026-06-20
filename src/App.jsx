@@ -30,6 +30,9 @@ function App() {
       lightRestoration: 0,
       corruptionLevel: 92,
       logicComplete: false,
+      logicLevel: 0,
+      logicCoreHealth: 0,
+      unlockedGates: [],
       modules: { logic: false, memory: false, cipher: false, ai: false }
     };
   });
