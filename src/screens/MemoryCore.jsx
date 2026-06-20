@@ -147,7 +147,7 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState 
 {/*  Asset Preview / Identity Frame  */}
 <div className="pixel-border h-48 bg-panel-gray overflow-hidden relative">
 <div className="absolute top-2 left-2 z-10 bg-black/80 px-2 font-code-sm text-terminal-green">FRAG_ID: 1912-A</div>
-<div className="w-full h-full bg-cover bg-center grayscale contrast-125 brightness-75" data-alt="A highly detailed, pixelated portrait of Alan Turing in a retro-cyberpunk terminal style. The image uses only black and terminal green colors with phosphor glow effects. His face is partially corrupted by digital noise and horizontal scanlines, suggesting an archive under recovery. The background is a dark mainframe grid with glowing binary code elements." style={{"backgroundImage":"url('https"}}></div>
+<div className="w-full h-full bg-cover bg-center grayscale contrast-125 brightness-75" data-alt="Turing portrait" style={{backgroundImage: "url('https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80')"}}></div>
 <div className="absolute inset-0 border-2 border-terminal-green/20 pointer-events-none"></div>
 </div>
 </aside>

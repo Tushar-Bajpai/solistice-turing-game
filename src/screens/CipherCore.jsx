@@ -132,14 +132,14 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState 
 </footer>
 </section>
 {/*  Right Panel: AI Terminal & Turing Portrait  */}
-<aside className="hidden lg:flex flex-col w-80 gap-gutter">
+<aside className="w-80 flex flex-col gap-4 shrink-0">
 <div className="terminal-border bg-panel-gray flex-1 flex flex-col overflow-hidden">
 <AiTerminal />
 </div>
 {/*  Portrait Fragment (50%)  */}
 <div className="h-64 bg-surface border-2 border-terminal-green relative overflow-hidden flex items-center justify-center">
 {/*  Portrait Image with data-alt  */}
-<div className="absolute inset-0 grayscale contrast-150 opacity-40 mix-blend-screen" data-alt="A high-contrast, stylized digital portrait of Alan Turing, rendered in the aesthetic of a corrupted 1950s monitor. The image is split into quadrants, with the top-left and top-right sections clearly visible while the bottom half remains obscured by digital noise and green phosphor glitches. The lighting is harsh and dramatic, emphasizing the historical and intellectual gravitas of the subject against a pitch-black background with vibrant terminal-green scanlines." style={{"backgroundImage":"url('https"}}>
+<div className="absolute inset-0 grayscale contrast-150 opacity-40 mix-blend-screen" data-alt="Turing portrait" style={{backgroundImage: "url('https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80')"}}>
 </div>
 {/*  Masking Overlay to simulate 50% completion  */}
 <div className="absolute inset-0 flex flex-col">

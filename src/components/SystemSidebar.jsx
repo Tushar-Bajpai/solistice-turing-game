@@ -55,11 +55,11 @@ export default function SystemSidebar({ currentScreen, setCurrentScreen, gameSta
 
   return (
     <aside className="w-64 flex flex-col gap-gutter shrink-0 h-full">
-      <section className="flex flex-col h-full terminal-border bg-panel-gray p-4 gap-4 relative overflow-hidden">
+      <section className="flex flex-col h-full terminal-border bg-panel-gray p-4 gap-4 relative overflow-y-auto custom-scrollbar">
         {currentScreen === 'AiCore' ? (
-          <div className="flex flex-col gap-2 mb-4 relative z-10">
-            <div className="w-full aspect-square pixel-border p-1 bg-surface relative overflow-hidden">
-              <div className="w-full h-full flex items-center justify-center text-[6px] leading-[6px] sm:text-[8px] sm:leading-[8px] text-terminal-green font-code-sm bg-black overflow-hidden opacity-80 pt-4 pb-8">
+          <div className="flex flex-col gap-2 mb-4 relative z-10 shrink-0">
+            <div className="w-48 h-48 mx-auto pixel-border p-1 bg-surface relative overflow-hidden">
+              <div className="w-full h-full flex items-center justify-center text-[6px] leading-[6px] sm:text-[8px] sm:leading-[8px] text-terminal-green font-code-sm bg-black overflow-hidden opacity-80">
                 <pre>{`
     .@@@@@@@@.
    @@@@@@@@@@@@
