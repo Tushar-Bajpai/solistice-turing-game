@@ -177,11 +177,21 @@ export default function MainHub({ setCurrentScreen, currentScreen }) {
       setLogicLevel(newLevel);
       setLogicCoreHealth(Math.min(100, logicCoreHealth + healthIncrease));
       setUnlockedGates(newUnlockedGates);
-      updateSolstice(2.5);
-      updateCorruption(-2);
       
-      if (addSystemLog) {
-        addSystemLog(`[SUCCESS]\nLogic Node Restored\n\n+2.5% Light Restoration\n-2% Corruption`);
+      const isBossPhase = currentPuzzle.level === 10;
+      const grantsStandardRewards = !isBossPhase || isFinalStage;
+
+      if (grantsStandardRewards) {
+        updateSolstice(2.5);
+        updateCorruption(-2);
+        
+        if (addSystemLog) {
+          addSystemLog(`[SUCCESS]\nLogic Node Restored\n\n+2.5% Light Restoration\n-2% Corruption`);
+        }
+      } else {
+        if (addSystemLog) {
+          addSystemLog(`[SUCCESS]\nLogic Node Phase Restored`);
+        }
       }
 
       setTimeout(() => {
