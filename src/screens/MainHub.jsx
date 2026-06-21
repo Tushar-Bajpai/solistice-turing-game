@@ -46,7 +46,7 @@ function evaluateGate(gate, a, b) {
 }
 
 export default function MainHub({ setCurrentScreen, currentScreen }) {
-  const { gameState, updateProgress, revokeProgress, addSystemLog, systemLogs } = useGame();
+  const { gameState, updateProgress, revokeProgress, updateSolstice, updateCorruption, addSystemLog, systemLogs } = useGame();
 
   const [logicLevel, setLogicLevel] = useState(() => parseInt(localStorage.getItem('logicLevel') || '0'));
   const [logicCoreHealth, setLogicCoreHealth] = useState(() => parseInt(localStorage.getItem('logicCoreHealth') || '0'));
@@ -177,6 +177,8 @@ export default function MainHub({ setCurrentScreen, currentScreen }) {
       setLogicLevel(newLevel);
       setLogicCoreHealth(Math.min(100, logicCoreHealth + healthIncrease));
       setUnlockedGates(newUnlockedGates);
+      updateSolstice(2.5);
+      updateCorruption(-2);
 
       setTimeout(() => {
         if (isFinalStage) {
@@ -203,6 +205,7 @@ export default function MainHub({ setCurrentScreen, currentScreen }) {
       }
       
       if (addSystemLog) addSystemLog(`[SYS] INVALID GATE (${gate}). SIGNAL REJECTED.`);
+      updateCorruption(1);
       setAttempts(prev => {
         const next = prev - 1;
         if (next <= 0) {

@@ -1,9 +1,34 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import SystemSidebar from '../components/SystemSidebar';
 import AiTerminal from '../components/AiTerminal';
+import { useGame } from '../context/GameContext';
 
 export default function AiCore({ setCurrentScreen, currentScreen }) {
   const terminalRef = React.useRef(null);
+  const { updateSolstice, updateCorruption, updateProgress } = useGame();
+
+  const [aiLevel, setAiLevel] = useState(() => parseInt(localStorage.getItem('aiLevel') || '0'));
+  
+  const AI_SEQUENCE = [0, 1, 1, 0, 1, 0, 0, 1, 0, 1];
+
+  const handleInput = (val) => {
+    if (aiLevel >= 10) return;
+    
+    if (val === AI_SEQUENCE[aiLevel]) {
+      const newLevel = aiLevel + 1;
+      setAiLevel(newLevel);
+      localStorage.setItem('aiLevel', newLevel);
+      
+      updateSolstice(2.5);
+      updateCorruption(-2);
+      
+      if (newLevel >= 10 && updateProgress) {
+        updateProgress('ai');
+      }
+    } else {
+      updateCorruption(1);
+    }
+  };
 
   const handleHelp = (e) => {
     e?.preventDefault();
@@ -77,11 +102,11 @@ export default function AiCore({ setCurrentScreen, currentScreen }) {
 <div className="absolute top-[130px] right-[50px] flex flex-col gap-4 items-center">
 <span className="font-label-caps text-label-caps text-solstice-gold mb-2">BRIDGE SYNAPTIC GAP</span>
 <div className="flex gap-8">
-<button className="w-16 h-16 border-2 border-solstice-gold bg-panel-gray flex items-center justify-center font-headline-lg text-headline-lg text-solstice-gold hover:bg-solstice-gold hover:text-surface transition-none group relative">
+<button onClick={() => handleInput(0)} className="w-16 h-16 border-2 border-solstice-gold bg-panel-gray flex items-center justify-center font-headline-lg text-headline-lg text-solstice-gold hover:bg-solstice-gold hover:text-surface transition-none group relative">
                                         0
                                         <span className="absolute -bottom-6 text-[10px] font-label-caps opacity-0 group-hover:opacity-100 whitespace-nowrap">LOGIC_PATH_A</span>
 </button>
-<button className="w-16 h-16 border-2 border-terminal-green bg-panel-gray flex items-center justify-center font-headline-lg text-headline-lg text-terminal-green hover:bg-terminal-green hover:text-surface transition-none group relative">
+<button onClick={() => handleInput(1)} className="w-16 h-16 border-2 border-terminal-green bg-panel-gray flex items-center justify-center font-headline-lg text-headline-lg text-terminal-green hover:bg-terminal-green hover:text-surface transition-none group relative">
                                         1
                                         <span className="absolute -bottom-6 text-[10px] font-label-caps opacity-0 group-hover:opacity-100 whitespace-nowrap">LOGIC_PATH_B</span>
 </button>

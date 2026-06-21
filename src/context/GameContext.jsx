@@ -48,7 +48,6 @@ export const GameProvider = ({ children }) => {
       let newCorruption = prev.corruptionLevel;
 
       if (!skipRewards) {
-        newLight += 25;
         newCorruption = moduleName === 'ai' ? 0 : Math.max(0, prev.corruptionLevel - 23);
       } else {
         if (moduleName === 'ai') newCorruption = 0;
@@ -62,6 +61,20 @@ export const GameProvider = ({ children }) => {
         corruptionLevel: newCorruption,
         completedModules: [...prev.completedModules, moduleName]
       };
+    });
+  };
+
+  const updateSolstice = (amount = 2.5) => {
+    setGameState(prev => {
+      const newProgress = Math.min(100, prev.solsticeProgress + amount);
+      return { ...prev, solsticeProgress: newProgress };
+    });
+  };
+
+  const updateCorruption = (amount) => {
+    setGameState(prev => {
+      const newCorruption = Math.max(0, Math.min(100, prev.corruptionLevel + amount));
+      return { ...prev, corruptionLevel: newCorruption };
     });
   };
 
@@ -81,7 +94,7 @@ export const GameProvider = ({ children }) => {
   };
 
   return (
-    <GameContext.Provider value={{ gameState, setGameState, updateProgress, revokeProgress, systemLogs, addSystemLog }}>
+    <GameContext.Provider value={{ gameState, setGameState, updateProgress, revokeProgress, updateSolstice, updateCorruption, systemLogs, addSystemLog }}>
       {children}
     </GameContext.Provider>
   );

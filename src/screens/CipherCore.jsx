@@ -6,7 +6,7 @@ import { cipherQuestions } from '../data/cipherQuestions';
 import { useGame } from '../context/GameContext';
 
 export default function CipherCore({ setCurrentScreen, currentScreen }) {
-  const { setGameState, updateProgress, revokeProgress } = useGame();
+  const { setGameState, updateProgress, revokeProgress, updateSolstice, updateCorruption } = useGame();
   const [userInput, setUserInput] = useState('');
   const [isSolved, setIsSolved] = useState(false);
   const [showHint, setShowHint] = useState(false);
@@ -136,11 +136,12 @@ export default function CipherCore({ setCurrentScreen, currentScreen }) {
         ...unlockedLogs
       ]);
       
+      // Removed manual corruption level set in setGameState since we use updateCorruption
       setGameState(prev => ({
-        ...prev,
-        solsticeProgress: Math.min(100, prev.solsticeProgress + 2.5),
-        corruptionLevel: Math.max(0, prev.corruptionLevel - 2.3)
+        ...prev
       }));
+      updateSolstice(2.5);
+      updateCorruption(-2);
 
       if (isFinal) {
         setShowCompletion(true);
@@ -160,6 +161,7 @@ export default function CipherCore({ setCurrentScreen, currentScreen }) {
       }
     } else {
       setAttemptsRemaining(prev => prev - 1);
+      updateCorruption(1);
       setLogs(prev => [...prev, 
         { time, msg: `DECRYPTING HASH: [${cleanInput}]...`, isWarning: false },
         { time: generateTimestamp(), msg: `INVALID HASH DETECTED. ATTEMPTS REMAINING: ${attemptsRemaining - 1}`, isWarning: true }

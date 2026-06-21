@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { animate } from 'animejs';
+import React, { useEffect, useRef, useState } from 'react';
+import { animate, stagger } from 'animejs';
 import { useGame } from '../context/GameContext';
 
 export default function SystemSidebar({ currentScreen, setCurrentScreen }) {
@@ -19,6 +19,40 @@ export default function SystemSidebar({ currentScreen, setCurrentScreen }) {
   }, [gameState.corruptionLevel]);
 
   const progress = gameState.solsticeProgress;
+  const [displayProgress, setDisplayProgress] = useState(progress);
+  const corruption = gameState.corruptionLevel;
+  const [displayCorruption, setDisplayCorruption] = useState(corruption);
+
+  useEffect(() => {
+    const obj = { val: displayProgress };
+    animate(obj, {
+      val: progress,
+      duration: 1000,
+      easing: 'outQuad',
+      update: () => setDisplayProgress(obj.val)
+    });
+
+    animate('.solstice-block', {
+      scale: [0.8, 1],
+      opacity: [0.3, 1],
+      duration: 600,
+      delay: stagger(50),
+      easing: 'outElastic(1, .8)'
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progress]);
+
+  useEffect(() => {
+    const obj = { val: displayCorruption };
+    animate(obj, {
+      val: corruption,
+      duration: 1500,
+      easing: 'outElastic(1, .8)',
+      update: () => setDisplayCorruption(obj.val)
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [corruption]);
+
   const filledBlocks = Math.floor(progress / 10);
 
   const getNavClass = (screenName, moduleKey) => {
@@ -88,7 +122,7 @@ export default function SystemSidebar({ currentScreen, setCurrentScreen }) {
           <div>
             <div className="flex justify-between font-label-caps text-label-caps mb-1">
               <span>CORRUPTION_LVL</span>
-              <span className="text-warning-red">{Number(gameState.corruptionLevel.toFixed(1))}%</span>
+              <span className="text-warning-red">{Number(displayCorruption.toFixed(1))}%</span>
             </div>
             <div className="w-full h-4 terminal-border p-0.5 overflow-hidden">
               <div ref={corruptionBarRef} className="h-full bg-warning-red" style={{ width: '92%' }}></div>
@@ -99,13 +133,13 @@ export default function SystemSidebar({ currentScreen, setCurrentScreen }) {
           <div>
             <div className="flex justify-between font-label-caps text-label-caps mb-1 text-solstice-gold">
               <span>SOLSTICE_METER</span>
-              <span>{Number(progress.toFixed(1))}%</span>
+              <span>{Number(displayProgress.toFixed(1))}%</span>
             </div>
             <div className="grid grid-cols-10 gap-1 h-6">
               {Array.from({ length: 10 }).map((_, i) => (
                 <div 
                   key={i} 
-                  className={`terminal-border transition-colors duration-500 ${i < filledBlocks ? 'bg-solstice-gold border-solstice-gold' : 'border-solstice-gold'}`}
+                  className={`solstice-block terminal-border transition-colors duration-500 ${i < filledBlocks ? 'bg-solstice-gold border-solstice-gold' : 'border-solstice-gold'}`}
                   style={{ opacity: i < filledBlocks ? 1 : 0.3 }}
                 ></div>
               ))}

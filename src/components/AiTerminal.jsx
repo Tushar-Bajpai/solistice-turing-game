@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { TUTORIAL_SEQUENCES, HINTS_DB, TRAINING_MODULES } from '../data/terminalData';
+import { useGame } from '../context/GameContext';
 
 const GATE_KNOWLEDGE = {
   'AND': 'AND GATE: Outputs 1 only if BOTH inputs are 1.',
@@ -20,6 +21,7 @@ const AiTerminal = forwardRef(({ contextualState }, ref) => {
   const [isTutorial, setIsTutorial] = useState(false);
   
   const messagesEndRef = useRef(null);
+  const { updateCorruption } = useGame();
   
   const safeContext = contextualState || { tier: 'UNKNOWN', level: 0, allowed: [], module: 'LOGIC' };
   
@@ -105,6 +107,7 @@ const AiTerminal = forwardRef(({ contextualState }, ref) => {
     if (hintArray.length === 0) return 'No hint available.';
     const idx = Math.min(hintTier, hintArray.length - 1);
     setHintTier(prev => prev + 1);
+    if (updateCorruption) updateCorruption(0.5);
     return `[HINT ${idx + 1}/${hintArray.length}]: ${hintArray[idx]}`;
   };
 

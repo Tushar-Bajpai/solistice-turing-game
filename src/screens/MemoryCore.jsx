@@ -19,7 +19,7 @@ function generateSequence(length) {
 }
 
 export default function MemoryCore({ setCurrentScreen, currentScreen }) {
-  const { gameState, updateProgress, revokeProgress, addSystemLog, systemLogs } = useGame();
+  const { gameState, updateProgress, revokeProgress, updateSolstice, updateCorruption, addSystemLog, systemLogs } = useGame();
   
   const safeSystemLogs = systemLogs || [];
   
@@ -150,6 +150,8 @@ export default function MemoryCore({ setCurrentScreen, currentScreen }) {
 
     setMemoryLevel(isFinalStage ? memoryLevel : memoryLevel + 1);
     setMemoryCoreHealth(Math.min(100, memoryCoreHealth + healthIncrease));
+    updateSolstice(2.5);
+    updateCorruption(-2);
 
     setTimeout(() => {
       if (isFinalStage) {
@@ -174,6 +176,8 @@ export default function MemoryCore({ setCurrentScreen, currentScreen }) {
         ease: 'inOutQuad'
       });
     }
+    
+    updateCorruption(1);
 
     if (addSystemLog) addSystemLog(`[SYS] INVALID SEQUENCE. SIGNAL REJECTED.`);
     setAttempts(prev => {
