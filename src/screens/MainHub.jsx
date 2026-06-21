@@ -179,6 +179,10 @@ export default function MainHub({ setCurrentScreen, currentScreen }) {
       setUnlockedGates(newUnlockedGates);
       updateSolstice(2.5);
       updateCorruption(-2);
+      
+      if (addSystemLog) {
+        addSystemLog(`[SUCCESS]\nLogic Node Restored\n\n+2.5% Light Restoration\n-2% Corruption`);
+      }
 
       setTimeout(() => {
         if (isFinalStage) {
@@ -204,7 +208,7 @@ export default function MainHub({ setCurrentScreen, currentScreen }) {
         });
       }
       
-      if (addSystemLog) addSystemLog(`[SYS] INVALID GATE (${gate}). SIGNAL REJECTED.`);
+      if (addSystemLog) addSystemLog(`[WARNING]\nIncorrect Gate Selection\n\n+1% Corruption`);
       updateCorruption(1);
       setAttempts(prev => {
         const next = prev - 1;
@@ -406,9 +410,15 @@ export default function MainHub({ setCurrentScreen, currentScreen }) {
               const text = typeof logItem === 'string' ? logItem : logItem.text;
               const time = typeof logItem === 'string' ? new Date().toLocaleTimeString() : logItem.time;
               return (
-                <div key={i} className="flex gap-4">
+                <div key={i} className="flex gap-4 py-1">
                   <span className="text-soft-green opacity-50">[{time}]</span>
-                  <span className={text.includes('UNLOCKED') ? 'text-solstice-gold' : text.includes('[SYS]') ? 'text-warning-red' : 'text-terminal-green'}>{text}</span>
+                  <span className={`whitespace-pre-line ${
+                    text.includes('[SUCCESS]') || text.includes('[RESTORE]') || text.includes('UNLOCKED') 
+                      ? 'text-solstice-gold' 
+                      : text.includes('[WARNING]') || text.includes('[SYS_WARN]') 
+                        ? 'text-warning-red' 
+                        : 'text-terminal-green'
+                  }`}>{text}</span>
                 </div>
               );
             })}

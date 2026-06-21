@@ -58,22 +58,29 @@ export default function SystemSidebar({ currentScreen, setCurrentScreen }) {
   const getNavClass = (screenName, moduleKey) => {
     let base = "p-2 flex justify-between items-center cursor-pointer font-label-caps text-label-caps border border-transparent transition-all ";
     
-    // Status text
-    let statusText = completedModules.includes(moduleKey) ? 'COMPLETED' : (currentScreen === screenName ? 'ACTIVE' : 'LOCKED');
+    const isCompleted = gameState.completedModules.includes(moduleKey);
+    const isUnlocked = gameState.unlockedModules.includes(moduleKey);
     
-    // Active Screen Styling
+    let statusText = 'LOCKED';
+    if (isCompleted) {
+      statusText = 'COMPLETED';
+    } else if (isUnlocked) {
+      statusText = 'ACTIVE';
+    }
+    
     if (currentScreen === screenName) {
       base += "bg-terminal-green text-surface ring-2 ring-solstice-gold ";
+    } else if (!isUnlocked) {
+      base += "text-terminal-green/40 cursor-not-allowed ";
     } else {
       base += "text-terminal-green hover:bg-soft-green/20 ";
     }
     
-    if (completedModules.includes(moduleKey)) {
-      // Completed styling
+    if (isCompleted) {
       base += currentScreen === screenName ? "" : "text-solstice-gold opacity-80 ";
     }
 
-    return { className: base, statusText };
+    return { className: base, statusText, isUnlocked };
   };
 
   const logicNav = getNavClass('MainHub', 'logic');
@@ -151,31 +158,31 @@ export default function SystemSidebar({ currentScreen, setCurrentScreen }) {
           
           {/* NAV LINKS */}
           <nav className="flex flex-col gap-2 mt-auto w-full">
-            <div onClick={() => setCurrentScreen('MainHub')} className={logicNav.className}>
+            <div onClick={() => logicNav.isUnlocked && setCurrentScreen('MainHub')} className={logicNav.className}>
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined">dns</span>
                 <span>LOGIC</span>
               </div>
               <span className="text-[10px]">{logicNav.statusText}</span>
             </div>
-            <div onClick={() => setCurrentScreen('MemoryCore')} className={memoryNav.className}>
+            <div onClick={() => memoryNav.isUnlocked && setCurrentScreen('MemoryCore')} className={memoryNav.className}>
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined">database</span>
                 <span>MEMORY</span>
               </div>
               <span className="text-[10px]">{memoryNav.statusText}</span>
             </div>
-            <div onClick={() => setCurrentScreen('CipherCore')} className={cipherNav.className}>
+            <div onClick={() => cipherNav.isUnlocked && setCurrentScreen('CipherCore')} className={cipherNav.className}>
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined">enhanced_encryption</span>
+                <span className="material-symbols-outlined">lock</span>
                 <span>CIPHER</span>
               </div>
               <span className="text-[10px]">{cipherNav.statusText}</span>
             </div>
-            <div onClick={() => setCurrentScreen('AiCore')} className={aiNav.className}>
+            <div onClick={() => aiNav.isUnlocked && setCurrentScreen('AiCore')} className={aiNav.className}>
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined">psychology</span>
-                <span>AI_CORE</span>
+                <span>AI</span>
               </div>
               <span className="text-[10px]">{aiNav.statusText}</span>
             </div>

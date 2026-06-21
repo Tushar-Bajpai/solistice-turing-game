@@ -152,6 +152,8 @@ export default function MemoryCore({ setCurrentScreen, currentScreen }) {
     setMemoryCoreHealth(Math.min(100, memoryCoreHealth + healthIncrease));
     updateSolstice(2.5);
     updateCorruption(-2);
+    
+    if (addSystemLog) addSystemLog(`[RESTORE]\nMemory Archive Recovered\n\n+2.5% Light Restoration\n-2% Corruption`);
 
     setTimeout(() => {
       if (isFinalStage) {
@@ -179,7 +181,7 @@ export default function MemoryCore({ setCurrentScreen, currentScreen }) {
     
     updateCorruption(1);
 
-    if (addSystemLog) addSystemLog(`[SYS] INVALID SEQUENCE. SIGNAL REJECTED.`);
+    if (addSystemLog) addSystemLog(`[WARNING]\nIncorrect Sequence\n\n+1% Corruption`);
     setAttempts(prev => {
       const next = prev - 1;
       if (next <= 0) {
@@ -393,9 +395,15 @@ export default function MemoryCore({ setCurrentScreen, currentScreen }) {
               const text = typeof logItem === 'string' ? logItem : logItem.text;
               const time = typeof logItem === 'string' ? new Date().toLocaleTimeString() : logItem.time;
               return (
-                <div key={i} className="flex gap-4">
+                <div key={i} className="flex gap-4 py-1">
                   <span className="text-soft-green opacity-50">[{time}]</span>
-                  <span className={text.includes('UNLOCKED') ? 'text-solstice-gold' : text.includes('[SYS]') ? 'text-warning-red' : 'text-terminal-green'}>{text}</span>
+                  <span className={`whitespace-pre-line ${
+                    text.includes('[SUCCESS]') || text.includes('[RESTORE]') || text.includes('UNLOCKED') 
+                      ? 'text-solstice-gold' 
+                      : text.includes('[WARNING]') || text.includes('[SYS_WARN]') 
+                        ? 'text-warning-red' 
+                        : 'text-terminal-green'
+                  }`}>{text}</span>
                 </div>
               );
             })}

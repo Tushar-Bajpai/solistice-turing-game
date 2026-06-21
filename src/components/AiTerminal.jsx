@@ -21,7 +21,7 @@ const AiTerminal = forwardRef(({ contextualState }, ref) => {
   const [isTutorial, setIsTutorial] = useState(false);
   
   const messagesEndRef = useRef(null);
-  const { updateCorruption } = useGame();
+  const { updateCorruption, addSystemLog } = useGame();
   
   const safeContext = contextualState || { tier: 'UNKNOWN', level: 0, allowed: [], module: 'LOGIC' };
   
@@ -108,6 +108,7 @@ const AiTerminal = forwardRef(({ contextualState }, ref) => {
     const idx = Math.min(hintTier, hintArray.length - 1);
     setHintTier(prev => prev + 1);
     if (updateCorruption) updateCorruption(0.5);
+    if (addSystemLog) addSystemLog(`[AI]\nHint Accessed\n\n+0.5% Corruption`);
     return `[HINT ${idx + 1}/${hintArray.length}]: ${hintArray[idx]}`;
   };
 

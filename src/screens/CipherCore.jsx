@@ -6,7 +6,8 @@ import { cipherQuestions } from '../data/cipherQuestions';
 import { useGame } from '../context/GameContext';
 
 export default function CipherCore({ setCurrentScreen, currentScreen }) {
-  const { setGameState, updateProgress, revokeProgress, updateSolstice, updateCorruption } = useGame();
+  const { setGameState, updateProgress, revokeProgress, updateSolstice, updateCorruption, addSystemLog, systemLogs } = useGame();
+  const safeSystemLogs = systemLogs || [];
   const [userInput, setUserInput] = useState('');
   const [isSolved, setIsSolved] = useState(false);
   const [showHint, setShowHint] = useState(false);
@@ -142,6 +143,8 @@ export default function CipherCore({ setCurrentScreen, currentScreen }) {
       }));
       updateSolstice(2.5);
       updateCorruption(-2);
+      
+      if (addSystemLog) addSystemLog(`[SUCCESS]\nCipher Decrypted\n\n+2.5% Light Restoration\n-2% Corruption`);
 
       if (isFinal) {
         setShowCompletion(true);
@@ -162,6 +165,9 @@ export default function CipherCore({ setCurrentScreen, currentScreen }) {
     } else {
       setAttemptsRemaining(prev => prev - 1);
       updateCorruption(1);
+      
+      if (addSystemLog) addSystemLog(`[WARNING]\nInvalid Hash\n\n+1% Corruption`);
+
       setLogs(prev => [...prev, 
         { time, msg: `DECRYPTING HASH: [${cleanInput}]...`, isWarning: false },
         { time: generateTimestamp(), msg: `INVALID HASH DETECTED. ATTEMPTS REMAINING: ${attemptsRemaining - 1}`, isWarning: true }
@@ -420,14 +426,23 @@ export default function CipherCore({ setCurrentScreen, currentScreen }) {
 </div>
 </div>
 </div>
-{/*  System Logs (Bottom Pane)  */}
-<footer className="border-t-2 border-terminal-green bg-surface h-24 overflow-y-auto p-2 font-code-sm text-soft-green">
-{logs.map((log, index) => (
-  <div key={index} className="flex gap-4">
-    <span className="text-terminal-green opacity-40">[{log.time}]</span>
-    <span className={log.isWarning ? "text-solstice-gold" : ""}>{log.msg}</span>
-  </div>
-))}
+<footer className="border-t-2 border-terminal-green bg-surface h-24 overflow-y-auto p-2 font-code-sm text-soft-green custom-scrollbar">
+{safeSystemLogs.map((logItem, i) => {
+  const text = typeof logItem === 'string' ? logItem : logItem.text;
+  const time = typeof logItem === 'string' ? new Date().toLocaleTimeString() : logItem.time;
+  return (
+    <div key={i} className="flex gap-4 py-1">
+      <span className="text-soft-green opacity-50">[{time}]</span>
+      <span className={`whitespace-pre-line ${
+        text.includes('[SUCCESS]') || text.includes('[RESTORE]') || text.includes('UNLOCKED') 
+          ? 'text-solstice-gold' 
+          : text.includes('[WARNING]') || text.includes('[SYS_WARN]') 
+            ? 'text-warning-red' 
+            : 'text-terminal-green'
+      }`}>{text}</span>
+    </div>
+  );
+})}
 <div ref={logsEndRef} />
 </footer>
 </section>

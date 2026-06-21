@@ -5,7 +5,9 @@ import { useGame } from '../context/GameContext';
 
 export default function AiCore({ setCurrentScreen, currentScreen }) {
   const terminalRef = React.useRef(null);
-  const { updateSolstice, updateCorruption, updateProgress } = useGame();
+  const { updateSolstice, updateCorruption, updateProgress, addSystemLog, systemLogs } = useGame();
+  
+  const safeSystemLogs = systemLogs || [];
 
   const [aiLevel, setAiLevel] = useState(() => parseInt(localStorage.getItem('aiLevel') || '0'));
   
@@ -22,11 +24,14 @@ export default function AiCore({ setCurrentScreen, currentScreen }) {
       updateSolstice(2.5);
       updateCorruption(-2);
       
+      if (addSystemLog) addSystemLog(`[SUCCESS]\nAI Synapse Bridged\n\n+2.5% Light Restoration\n-2% Corruption`);
+      
       if (newLevel >= 10 && updateProgress) {
         updateProgress('ai');
       }
     } else {
       updateCorruption(1);
+      if (addSystemLog) addSystemLog(`[WARNING]\nSynapse Mismatch\n\n+1% Corruption`);
     }
   };
 
@@ -156,19 +161,23 @@ export default function AiCore({ setCurrentScreen, currentScreen }) {
 {/*  Bottom Panel: System Logs  */}
 <footer className="h-32 terminal-border bg-surface shrink-0 p-4 font-code-sm text-code-sm flex flex-col gap-1 overflow-hidden relative">
 <div className="absolute top-0 right-4 px-2 bg-surface text-terminal-green opacity-50 text-[10px] uppercase font-headline-md">Live Stream logs</div>
-<div className="flex flex-col gap-1 overflow-y-auto" id="log-container">
-<div className="flex gap-4">
-<span className="text-soft-green opacity-50">[21:14:02:12]</span>
-<span className="text-terminal-green">AI CORE SYNC IN PROGRESS...</span>
-</div>
-<div className="flex gap-4">
-<span className="text-soft-green opacity-50">[21:14:05:44]</span>
-<span className="text-soft-green">NEURAL PATHWAY ALPHA RESTORED</span>
-</div>
-<div className="flex gap-4">
-<span className="text-soft-green opacity-50">[21:14:09:88]</span>
-<span className="text-solstice-gold">TURING PORTRAIT FRAGMENT 3/4 RECOVERED</span>
-</div>
+<div className="flex flex-col gap-1 overflow-y-auto custom-scrollbar" id="log-container">
+  {safeSystemLogs.map((logItem, i) => {
+    const text = typeof logItem === 'string' ? logItem : logItem.text;
+    const time = typeof logItem === 'string' ? new Date().toLocaleTimeString() : logItem.time;
+    return (
+      <div key={i} className="flex gap-4 py-1">
+        <span className="text-soft-green opacity-50">[{time}]</span>
+        <span className={`whitespace-pre-line ${
+          text.includes('[SUCCESS]') || text.includes('[RESTORE]') || text.includes('UNLOCKED') 
+            ? 'text-solstice-gold' 
+            : text.includes('[WARNING]') || text.includes('[SYS_WARN]') 
+              ? 'text-warning-red' 
+              : 'text-terminal-green'
+        }`}>{text}</span>
+      </div>
+    );
+  })}
 </div>
 </footer>
 </div>

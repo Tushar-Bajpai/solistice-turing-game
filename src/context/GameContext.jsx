@@ -55,11 +55,17 @@ export const GameProvider = ({ children }) => {
 
       addSystemLog(`${moduleName.toUpperCase()} CORE RESTORED`);
 
+      let newUnlocked = [...prev.unlockedModules];
+      if (moduleName === 'logic' && !newUnlocked.includes('memory')) newUnlocked.push('memory');
+      if (moduleName === 'memory' && !newUnlocked.includes('cipher')) newUnlocked.push('cipher');
+      if (moduleName === 'cipher' && !newUnlocked.includes('ai')) newUnlocked.push('ai');
+
       return {
         ...prev,
         solsticeProgress: Math.min(100, newLight),
         corruptionLevel: newCorruption,
-        completedModules: [...prev.completedModules, moduleName]
+        completedModules: [...prev.completedModules, moduleName],
+        unlockedModules: newUnlocked
       };
     });
   };
