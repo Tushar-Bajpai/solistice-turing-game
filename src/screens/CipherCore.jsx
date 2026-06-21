@@ -361,7 +361,11 @@ export default function CipherCore({ setCurrentScreen, currentScreen }) {
 <div className="flex flex-col items-center gap-4">
 <div className="text-solstice-gold font-code-sm uppercase tracking-tighter">&gt;&gt;&gt; INTERCEPTED_SIGNAL_STREAM &lt;&lt;&lt;</div>
 <div className="bg-surface border-2 border-terminal-green p-8 w-full text-center">
-<span className="font-headline-lg text-[48px] tracking-[1rem] glow-green block mb-4">
+<span className={`font-headline-lg glow-green block mb-4 leading-[1.5] ${
+  (!isSolved && currentPuzzle.encryptedMessage.length > 20)
+    ? 'text-[20px] tracking-[0.3rem] sm:text-[28px] sm:tracking-[0.5rem] md:text-[36px] break-words'
+    : 'text-[32px] tracking-[0.5rem] md:text-[48px] md:tracking-[1rem]'
+}`}>
   {isSolved ? currentPuzzle.answer : currentPuzzle.encryptedMessage}
 </span>
 <span className="font-code-sm text-soft-green opacity-50">ENCRYPTION_TYPE: {currentPuzzle.type}</span>
