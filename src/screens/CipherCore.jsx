@@ -11,6 +11,12 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
   const logsEndRef = useRef(null);
+  const terminalRef = useRef(null);
+
+  const handleHelp = (e) => {
+    e?.preventDefault();
+    terminalRef.current?.executeCommand('HELP');
+  };
 
   const initializeState = (key, defaultValue) => {
     const saved = localStorage.getItem(key);
@@ -241,7 +247,8 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
 <header className="w-full flex justify-between items-center py-unit terminal-border border-b-2 border-terminal-green bg-surface px-gutter shrink-0">
 <div className="font-headline-lg text-headline-lg text-terminal-green uppercase">SOLSTICE://TURING</div>
 
-<div className="flex gap-4">
+<div className="flex items-center gap-4">
+<button onClick={handleHelp} className="font-code-sm text-terminal-green hover:text-solstice-gold border border-terminal-green/30 px-2 py-1 transition-colors">HELP</button>
 <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:scale-110 active:scale-95 transition-transform">settings</span>
 <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:scale-110 active:scale-95 transition-transform">terminal</span>
 </div>
@@ -395,7 +402,7 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
 {/*  Right Panel: AI Terminal & Turing Portrait  */}
 <aside className="w-80 flex flex-col gap-4 shrink-0">
 <div className="terminal-border bg-panel-gray flex-1 flex flex-col overflow-hidden">
-<AiTerminal contextualState={{ module: 'CIPHER', difficulty: currentPuzzle.difficulty, type: currentPuzzle.type }} gameState={gameState} />
+<AiTerminal ref={terminalRef} contextualState={{ module: 'CIPHER', difficulty: currentPuzzle.difficulty, type: currentPuzzle.type }} gameState={gameState} />
 </div>
 {/*  Portrait Fragment (50%)  */}
 <div className="h-64 bg-surface border-2 border-terminal-green relative overflow-hidden flex items-center justify-center">
@@ -425,7 +432,6 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
 <nav className="flex gap-4">
 <a className="font-code-sm text-code-sm text-soft-green opacity-60 hover:text-terminal-green transition-opacity" href="#" onClick={handleRestartLevel}>REBOOT</a>
 <a className="font-code-sm text-code-sm text-soft-green opacity-60 hover:text-terminal-green transition-opacity" href="#" onClick={(e) => { e.preventDefault(); setShowResetConfirm(true); }}>DUMP</a>
-<a className="font-code-sm text-code-sm text-soft-green opacity-60 hover:text-terminal-green transition-opacity" href="#">HELP</a>
 </nav>
 </footer>
 </div>

@@ -3,6 +3,13 @@ import SystemSidebar from '../components/SystemSidebar';
 import AiTerminal from '../components/AiTerminal';
 
 export default function AiCore({ setCurrentScreen, currentScreen, gameState }) {
+  const terminalRef = React.useRef(null);
+
+  const handleHelp = (e) => {
+    e?.preventDefault();
+    terminalRef.current?.executeCommand('HELP');
+  };
+
   useEffect(() => {
   }, []);
 
@@ -17,6 +24,7 @@ export default function AiCore({ setCurrentScreen, currentScreen, gameState }) {
             SOLSTICE://TURING
 </div>
 <div className="flex items-center gap-4">
+<button onClick={handleHelp} className="font-code-sm text-terminal-green hover:text-solstice-gold border border-terminal-green/30 px-2 py-1 transition-colors">HELP</button>
 <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
 <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">settings</span>
 </div>
@@ -93,7 +101,7 @@ export default function AiCore({ setCurrentScreen, currentScreen, gameState }) {
 {/*  Right Panel: Command Center  */}
 <section className="w-80 flex flex-col gap-4 h-full shrink-0">
 <div className="flex-1 terminal-border bg-panel-gray flex flex-col overflow-hidden">
-<AiTerminal />
+<AiTerminal ref={terminalRef} contextualState={{ module: 'AI' }} gameState={gameState} />
 </div>
 {/*  Portrait Preview Fragment  */}
 <div className="h-48 terminal-border bg-surface p-2 flex flex-col relative shrink-0">

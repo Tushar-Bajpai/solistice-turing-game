@@ -54,6 +54,17 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
   const successContainerRef = useRef(null);
   const failureOverlayRef = useRef(null);
   const resetOverlayRef = useRef(null);
+  const terminalRef = useRef(null);
+
+  const handleHelp = (e) => {
+    e?.preventDefault();
+    terminalRef.current?.executeCommand('HELP');
+  };
+
+  const handleAcademy = (e) => {
+    e?.preventDefault();
+    terminalRef.current?.executeCommand('ACADEMY');
+  };
 
   const safeGameState = gameState || { 
     lightRestoration: 0, 
@@ -234,6 +245,8 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
               SOLSTICE://TURING
           </div>
           <div className="flex items-center gap-4">
+            <button onClick={handleAcademy} className="font-code-sm text-terminal-green hover:text-solstice-gold border border-terminal-green/30 px-2 py-1 transition-colors">TURING_ACADEMY</button>
+            <button onClick={handleHelp} className="font-code-sm text-terminal-green hover:text-solstice-gold border border-terminal-green/30 px-2 py-1 transition-colors">HELP</button>
             <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
             <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">settings</span>
           </div>
@@ -379,7 +392,7 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
           </section>
 
           {/* AI Terminal Context Passed In */}
-          <AiTerminal contextualState={terminalContext} gameState={safeGameState} />
+          <AiTerminal ref={terminalRef} contextualState={terminalContext} gameState={safeGameState} />
         </main>
 
         <footer className="h-32 terminal-border bg-surface shrink-0 p-4 font-code-sm text-code-sm flex flex-col gap-1 overflow-hidden relative">

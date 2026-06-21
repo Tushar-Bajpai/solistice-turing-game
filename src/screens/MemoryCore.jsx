@@ -39,6 +39,12 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
   const timerBarRef = useRef(null);
   const failureOverlayRef = useRef(null);
   const successContainerRef = useRef(null);
+  const terminalRef = useRef(null);
+
+  const handleHelp = (e) => {
+    e?.preventDefault();
+    terminalRef.current?.executeCommand('HELP');
+  };
   
   const currentLevel = Math.min((safeGameState.memoryLevel || 0) + 1, 10);
   const currentTier = MEMORY_TIERS.find(t => currentLevel <= t.levelMax) || MEMORY_TIERS[2];
@@ -250,6 +256,7 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
               SOLSTICE://TURING
           </div>
           <div className="flex items-center gap-4">
+            <button onClick={handleHelp} className="font-code-sm text-terminal-green hover:text-solstice-gold border border-terminal-green/30 px-2 py-1 transition-colors">HELP</button>
             <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
             <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">settings</span>
           </div>
@@ -379,7 +386,7 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
           </section>
 
           {/* AI Terminal Context Passed In */}
-          <AiTerminal contextualState={terminalContext} gameState={safeGameState} />
+          <AiTerminal ref={terminalRef} contextualState={terminalContext} gameState={safeGameState} />
         </main>
 
         <footer className="h-32 terminal-border bg-surface shrink-0 p-4 font-code-sm text-code-sm flex flex-col gap-1 overflow-hidden relative">

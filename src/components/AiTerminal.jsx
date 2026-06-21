@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { TUTORIAL_SEQUENCES, HINTS_DB, TRAINING_MODULES } from '../data/terminalData';
 
 const GATE_KNOWLEDGE = {
   'AND': 'AND GATE: Outputs 1 only if BOTH inputs are 1.',
@@ -9,30 +10,60 @@ const GATE_KNOWLEDGE = {
   'XNOR': 'XNOR GATE: Inverse of XOR. Outputs 1 if inputs are the SAME.'
 };
 
-const LOGIC_HINTS = {
-  1: 'Basic AND logic. Output is 0 if any input is 0.',
-  2: 'Basic OR logic. Output is 1 if any input is 1.',
-  3: 'Both are 1, target is 1. Standard OR or AND applies.',
-  4: 'Inputs differ. Target is 1. Exclusive OR required.',
-  5: 'Inputs are same, target is 0. Exclusive OR required.',
-  6: 'Basic OR logic. One input is 1.',
-  7: 'Both inputs 1, but target is 0. You need an inverted AND.',
-  8: 'Both inputs 0, target 1. You need an inverted OR.',
-  9: 'Inputs are same, target is 1. Exclusive NOR required.',
-  10: 'Boss Phase: Reconstruct the path step by step. First, resolve 1 and 0 to 0.'
-};
-
-export default function AiTerminal({ contextualState, gameState }) {
+const AiTerminal = forwardRef(({ contextualState, gameState }, ref) => {
   const [messages, setMessages] = useState([
-    { sender: 'SYSTEM', text: 'Connection established. Solstice Shell V1.0 active.' },
-    { sender: 'CORE', text: 'AWAITING_INPUT_SIGNAL...' }
+    { sender: 'SYSTEM', text: 'Connection established. Solstice Shell V1.0 active.' }
   ]);
   const [inputValue, setInputValue] = useState('');
+  const [hintTier, setHintTier] = useState(0);
+  const [inAcademy, setInAcademy] = useState(false);
+  const [isTutorial, setIsTutorial] = useState(false);
   
   const messagesEndRef = useRef(null);
-
+  
   const safeContext = contextualState || { tier: 'UNKNOWN', level: 0, allowed: [], module: 'LOGIC' };
   const safeUnlocked = (gameState && gameState.unlockedGates) ? gameState.unlockedGates : [];
+
+  useEffect(() => {
+    setHintTier(0);
+  }, [safeContext.level, safeContext.difficulty]);
+
+  useEffect(() => {
+    const mod = safeContext.module;
+    if (mod) {
+      const isComplete = localStorage.getItem(`tutorial_${mod}`);
+      if (!isComplete && TUTORIAL_SEQUENCES[mod]) {
+        setIsTutorial(true);
+        const seq = TUTORIAL_SEQUENCES[mod];
+        let delay = 500;
+        seq.forEach((msg, idx) => {
+          setTimeout(() => {
+            setMessages(prev => {
+              if (localStorage.getItem(`tutorial_${mod}`)) return prev;
+              return [...prev, msg];
+            });
+            if (idx === seq.length - 1) {
+               setTimeout(() => {
+                  localStorage.setItem(`tutorial_${mod}`, 'true');
+                  setIsTutorial(false);
+                  setMessages(prev => [...prev, { sender: 'CORE', text: 'AWAITING_INPUT_SIGNAL...' }]);
+               }, 1000);
+            }
+          }, delay);
+          delay += 2000;
+        });
+      } else if (messages.length === 1) {
+        addMessage('CORE', 'AWAITING_INPUT_SIGNAL...');
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safeContext.module]);
+
+  useImperativeHandle(ref, () => ({
+    executeCommand(cmd) {
+      handleExternalCommand(cmd);
+    }
+  }));
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -48,63 +79,102 @@ export default function AiTerminal({ contextualState, gameState }) {
     setMessages(prev => [...prev, { sender, text }]);
   };
 
-  const getHint = () => {
-    if (safeContext.module === 'MEMORY') {
-      return `MEMORY MODULE: Expected sequence length is ${safeContext.sequenceLength} bits. Chunk the binary string into blocks of 3 for easier retention.`;
+  const handleExternalCommand = (cmd) => {
+    addMessage('USER', `> ${cmd}`);
+    processCommand(cmd);
+  };
+
+  const getHintText = () => {
+    const mod = safeContext.module;
+    let hintArray = [];
+    if (mod === 'LOGIC') {
+      hintArray = HINTS_DB.LOGIC[safeContext.level] || ['Analyze the inputs.'];
+    } else if (mod === 'MEMORY') {
+      hintArray = HINTS_DB.MEMORY.DEFAULT;
+    } else if (mod === 'CIPHER') {
+      const typeStr = safeContext.difficulty || '1_CAESAR';
+      hintArray = HINTS_DB.CIPHER[typeStr] || ['Analyze the cipher pattern.'];
     }
-    if (safeContext.module === 'CIPHER') {
-      if (safeContext.difficulty && safeContext.difficulty.includes('CAESAR')) {
-        const shiftMatch = safeContext.type ? safeContext.type.match(/\d+/) : null;
-        const shift = shiftMatch ? shiftMatch[0] : 'X';
-        return `This message uses a shift of ${shift}.`;
-      }
-      if (safeContext.difficulty && safeContext.difficulty.includes('BINARY')) {
-        return "Convert each 8-bit value into ASCII.";
-      }
-      return "Map numbers to letters.";
-    }
-    return LOGIC_HINTS[safeContext.level] || 'No hint available for current state.';
+    
+    if (hintArray.length === 0) return 'No hint available.';
+    const idx = Math.min(hintTier, hintArray.length - 1);
+    setHintTier(prev => prev + 1);
+    return `[HINT ${idx + 1}/${hintArray.length}]: ${hintArray[idx]}`;
   };
 
   const handleHint = () => {
-    addMessage('USER', '> GIVE HINT');
-    setTimeout(() => addMessage('AI', getHint()), 500);
+    handleExternalCommand('HINT');
   };
 
   const handleExplain = (gate) => {
-    addMessage('USER', `> EXPLAIN ${gate}`);
-    if (safeUnlocked.includes(gate)) {
-      setTimeout(() => addMessage('ARCHIVE', GATE_KNOWLEDGE[gate]), 500);
-    } else {
-      setTimeout(() => addMessage('AI', `ERROR: Knowledge of [${gate}] is locked. Use it correctly to extract its archive data.`), 500);
-    }
+    handleExternalCommand(`EXPLAIN ${gate}`);
+  };
+
+  const processCommand = (cmdStr) => {
+    const cmd = cmdStr.toUpperCase().trim();
+    
+    setTimeout(() => {
+      if (cmd === 'SKIP' || cmd === 'SKIP TUTORIAL') {
+         if (isTutorial) {
+            localStorage.setItem(`tutorial_${safeContext.module}`, 'true');
+            setIsTutorial(false);
+            addMessage('SYSTEM', 'TUTORIAL ABORTED.');
+            addMessage('CORE', 'AWAITING_INPUT_SIGNAL...');
+         } else {
+            addMessage('SYSTEM', 'NO ACTIVE TUTORIAL TO SKIP.');
+         }
+         return;
+      }
+
+      if (cmd === 'HELP') {
+        addMessage('SYSTEM', 'AVAILABLE COMMANDS: \n- HINT\n- EXPLAIN [GATE]\n- ACADEMY\n- SKIP');
+        return;
+      }
+
+      if (cmd === 'ACADEMY') {
+        setInAcademy(true);
+        addMessage('ARCHIVE', '=== TURING ACADEMY ===\nSELECT A TRAINING MODULE:\n[1] Logic Basics\n[2] Memory Basics\n[3] Cipher Basics\n[4] Alan Turing Knowledge Base\n[EXIT] Leave Academy');
+        return;
+      }
+
+      if (inAcademy) {
+        if (cmd === 'EXIT') {
+          setInAcademy(false);
+          addMessage('SYSTEM', 'EXITING ACADEMY.');
+          return;
+        }
+        if (TRAINING_MODULES[cmd]) {
+          addMessage('ARCHIVE', TRAINING_MODULES[cmd]);
+        } else {
+          addMessage('SYSTEM', 'INVALID MODULE. TYPE 1, 2, 3, 4 OR EXIT.');
+        }
+        return;
+      }
+
+      if (cmd === 'HINT') {
+        addMessage('AI', getHintText());
+      } else if (cmd.startsWith('EXPLAIN ')) {
+        const gate = cmd.replace('EXPLAIN ', '').trim();
+        if (GATE_KNOWLEDGE[gate]) {
+          if (safeUnlocked.includes(gate)) {
+            addMessage('ARCHIVE', GATE_KNOWLEDGE[gate]);
+          } else {
+            addMessage('AI', `ERROR: Knowledge of [${gate}] is locked.`);
+          }
+        } else {
+          addMessage('AI', `UNKNOWN GATE: ${gate}`);
+        }
+      } else {
+        addMessage('SYSTEM', `COMMAND NOT RECOGNIZED. TYPE 'HELP' FOR ASSISTANCE.`);
+      }
+    }, 400);
   };
 
   const handleSubmit = (e) => {
     if (e.key === 'Enter' && inputValue.trim()) {
-      addMessage('USER', `> ${inputValue.toUpperCase()}`);
-      
-      const cmd = inputValue.toUpperCase().trim();
-      setTimeout(() => {
-        if (cmd === 'HINT') {
-          addMessage('AI', getHint());
-        } else if (cmd.startsWith('EXPLAIN ')) {
-          const gate = cmd.replace('EXPLAIN ', '').trim();
-          if (GATE_KNOWLEDGE[gate]) {
-            if (safeUnlocked.includes(gate)) {
-              addMessage('ARCHIVE', GATE_KNOWLEDGE[gate]);
-            } else {
-              addMessage('AI', `ERROR: Knowledge of [${gate}] is locked.`);
-            }
-          } else {
-            addMessage('AI', `UNKNOWN GATE: ${gate}`);
-          }
-        } else {
-          addMessage('SYSTEM', `COMMAND NOT RECOGNIZED.`);
-        }
-      }, 400);
-      
+      const val = inputValue;
       setInputValue('');
+      handleExternalCommand(val);
     }
   };
 
@@ -120,7 +190,7 @@ export default function AiTerminal({ contextualState, gameState }) {
           {messages.map((msg, idx) => (
             <div key={idx} className="flex gap-2">
               <span className="text-terminal-green opacity-50 shrink-0">[{msg.sender}]:</span>
-              <span className={msg.sender === 'USER' ? 'text-terminal-green' : msg.sender === 'ARCHIVE' ? 'text-solstice-gold' : 'text-soft-green'}>
+              <span className={`whitespace-pre-wrap ${msg.sender === 'USER' ? 'text-terminal-green' : msg.sender === 'ARCHIVE' ? 'text-solstice-gold' : 'text-soft-green'}`}>
                 {msg.text}
               </span>
             </div>
@@ -163,4 +233,7 @@ export default function AiTerminal({ contextualState, gameState }) {
       </div>
     </div>
   );
-}
+});
+
+AiTerminal.displayName = 'AiTerminal';
+export default AiTerminal;
