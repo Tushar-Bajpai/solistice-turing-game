@@ -21,6 +21,7 @@ const screens = {
 
 function AppContent() {
   const [currentScreen, setCurrentScreen] = useState('MainHub');
+  const [dismissedCritical, setDismissedCritical] = useState(false);
   const { gameState } = useGame();
   
   const ScreenComponent = screens[currentScreen];
@@ -51,21 +52,10 @@ function AppContent() {
   }, [progress]);
 
   useEffect(() => {
-    if (corruption >= 75) {
-      const interval = setInterval(() => {
-        if (Math.random() > 0.4) {
-          animate('.app-theme-wrapper', {
-            translateX: [0, -4, 4, -2, 2, 0],
-            skewX: [0, -1, 1, 0],
-            duration: 300,
-            easing: 'easeInOutSine'
-          });
-        }
-      }, corruption >= 100 ? 1500 : 3500);
-      return () => clearInterval(interval);
+    if (corruption < 100) {
+      setDismissedCritical(false);
     }
   }, [corruption]);
-
   return (
     <div className={`font-body-md text-body-md text-terminal-green uppercase selection:bg-terminal-green selection:text-surface relative w-full h-full min-h-screen bg-[#050505] app-theme-wrapper ${themeClass}`}>
       <div className="h-full">
@@ -76,14 +66,21 @@ function AppContent() {
       </div>
 
       {/* Critical Corruption Overlay */}
-      {corruption >= 100 && (
-        <div className="fixed inset-0 z-[100] pointer-events-none flex flex-col items-center justify-start pt-24">
-          <div className="absolute inset-0 bg-warning-red/10 crt-flicker mix-blend-screen" />
-          <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(255,51,51,0.3)] animate-pulse" />
+      {corruption >= 100 && !dismissedCritical && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-warning-red/10 crt-flicker mix-blend-screen pointer-events-none" />
+          <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(255,51,51,0.3)] animate-pulse pointer-events-none" />
           
-          <div className="bg-warning-red/90 text-black px-8 py-4 md:px-24 md:py-6 font-headline-lg text-2xl md:text-5xl tracking-[0.2em] md:tracking-[0.5em] text-center border-y-4 border-black crt-flicker relative shadow-[0_0_50px_rgba(255,51,51,0.8)]">
+          <div className="bg-warning-red/90 text-black px-8 py-4 md:px-24 md:py-6 font-headline-lg text-2xl md:text-5xl tracking-[0.2em] md:tracking-[0.5em] text-center border-y-4 border-black crt-flicker relative shadow-[0_0_50px_rgba(255,51,51,0.8)] mb-8">
             CRITICAL CORRUPTION DETECTED
           </div>
+
+          <button 
+            onClick={() => setDismissedCritical(true)}
+            className="relative z-10 px-8 py-4 bg-[#050505] border-2 border-warning-red text-warning-red font-headline-md text-xl hover:bg-warning-red hover:text-black transition-colors shadow-[0_0_20px_rgba(255,51,51,0.5)] cursor-pointer"
+          >
+            PLAY FOR RECOVERY
+          </button>
         </div>
       )}
     </div>
