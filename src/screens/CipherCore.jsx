@@ -1,8 +1,210 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { animate, stagger } from 'animejs';
 import SystemSidebar from '../components/SystemSidebar';
 import AiTerminal from '../components/AiTerminal';
+import { cipherQuestions } from '../data/cipherQuestions';
 
-export default function CipherCore({ setCurrentScreen, currentScreen, gameState }) {
+export default function CipherCore({ setCurrentScreen, currentScreen, gameState, setGameState, updateProgress }) {
+  const [userInput, setUserInput] = useState('');
+  const [isSolved, setIsSolved] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showCompletion, setShowCompletion] = useState(false);
+  const logsEndRef = useRef(null);
+
+  const initializeState = (key, defaultValue) => {
+    const saved = localStorage.getItem(key);
+    if (saved !== null) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return defaultValue;
+      }
+    }
+    return defaultValue;
+  };
+
+  const [cipherLevel, setCipherLevel] = useState(() => initializeState('cipherLevel', 1));
+  const [cipherHealth, setCipherHealth] = useState(() => initializeState('cipherHealth', 0));
+  const [currentPuzzle, setCurrentPuzzle] = useState(() => initializeState('currentPuzzle', cipherQuestions[0]));
+  const [attemptsRemaining, setAttemptsRemaining] = useState(() => initializeState('attemptsRemaining', 3));
+  const [archivesRestored, setArchivesRestored] = useState(() => initializeState('archivesRestored', 0));
+  const [cipherScore, setCipherScore] = useState(() => initializeState('cipherScore', 0));
+  const [unlockedTuringArchives, setUnlockedTuringArchives] = useState(() => initializeState('unlockedTuringArchives', []));
+
+  const TURING_FACTS = {
+    3: "Alan Turing helped decode the Enigma machine during World War II.",
+    6: "He formalized the concepts of algorithm and computation with the Turing machine.",
+    9: "Turing proposed the 'Turing Test' in 1950 as a criterion of machine intelligence."
+  };
+
+  const [logs, setLogs] = useState([
+    { time: "14:32:05:22", msg: "ENCRYPTION KEY SYNCED", isWarning: false },
+    { time: "14:32:05:48", msg: "CIPHER_CORE_HEURISTICS: ONLINE", isWarning: false },
+    { time: "14:32:06:12", msg: "WARNING: PARTIAL SIGNAL DEGRADATION IN SECTOR 7G", isWarning: true },
+    { time: "14:32:06:33", msg: "HEURISTIC SCAN COMPLETE: READY FOR DECODER INPUT", isWarning: false }
+  ]);
+
+  const scrollToBottom = () => {
+    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [logs]);
+
+  useEffect(() => {
+    localStorage.setItem('cipherLevel', JSON.stringify(cipherLevel));
+    localStorage.setItem('cipherHealth', JSON.stringify(cipherHealth));
+    localStorage.setItem('currentPuzzle', JSON.stringify(currentPuzzle));
+    localStorage.setItem('attemptsRemaining', JSON.stringify(attemptsRemaining));
+    localStorage.setItem('archivesRestored', JSON.stringify(archivesRestored));
+    localStorage.setItem('cipherScore', JSON.stringify(cipherScore));
+    localStorage.setItem('unlockedTuringArchives', JSON.stringify(unlockedTuringArchives));
+  }, [cipherLevel, cipherHealth, currentPuzzle, attemptsRemaining, archivesRestored, cipherScore, unlockedTuringArchives]);
+
+  useEffect(() => {
+    if (showCompletion) {
+      animate('#completion-overlay', {
+        opacity: [0, 1],
+        duration: 1500,
+        ease: 'inOutQuad'
+      });
+      animate('.completion-text', {
+        scale: [0.9, 1],
+        opacity: [0, 1],
+        delay: stagger(600, {start: 500}),
+        duration: 1500,
+        ease: 'outElastic(1, .8)'
+      });
+      
+      setTimeout(() => {
+        if (updateProgress) updateProgress('cipher');
+        setCurrentScreen('MainHub');
+      }, 5000);
+    }
+  }, [showCompletion, setCurrentScreen, updateProgress]);
+
+  const generateTimestamp = () => {
+    const now = new Date();
+    const ms = now.getMilliseconds().toString().padStart(3, '0').slice(0, 2);
+    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}:${ms}`;
+  };
+
+  const handleExecuteCipher = () => {
+    if (isSolved || attemptsRemaining <= 0) return;
+    
+    const time = generateTimestamp();
+    const cleanInput = userInput.trim().toUpperCase();
+    
+    if (cleanInput === '') return;
+    
+    if (cleanInput === currentPuzzle.answer) {
+      setIsSolved(true);
+      setCipherScore(prev => prev + 100);
+      setArchivesRestored(prev => prev + 1);
+      setCipherHealth(prev => Math.min(100, prev + 10));
+      
+      const unlockedLogs = [];
+      if (TURING_FACTS[cipherLevel] && !unlockedTuringArchives.includes(cipherLevel)) {
+        setUnlockedTuringArchives(prev => [...prev, cipherLevel]);
+        unlockedLogs.push({ time: generateTimestamp(), msg: "TURING ARCHIVE UNLOCKED", isWarning: true });
+        unlockedLogs.push({ time: generateTimestamp(), msg: TURING_FACTS[cipherLevel], isWarning: false });
+      }
+
+      const isFinal = cipherLevel >= cipherQuestions.length;
+
+      setLogs(prev => [...prev, 
+        { time, msg: `DECRYPTING HASH: [${cleanInput}]...`, isWarning: false },
+        { time: generateTimestamp(), msg: "COMMUNICATION RESTORED.", isWarning: false },
+        ...(isFinal ? [
+          { time: generateTimestamp(), msg: "ENCRYPTION NETWORK RESTORED", isWarning: false },
+          { time: generateTimestamp(), msg: "COMMUNICATION CHANNELS ONLINE", isWarning: false }
+        ] : []),
+        ...unlockedLogs
+      ]);
+      
+      if (setGameState) {
+        setGameState(prev => ({
+          ...prev,
+          lightRestoration: prev.lightRestoration + 2.5,
+          corruptionLevel: Math.max(0, prev.corruptionLevel - 2.3)
+        }));
+      }
+
+      if (isFinal) {
+        setShowCompletion(true);
+      } else {
+        setTimeout(() => {
+          setCipherLevel(prev => {
+            const nextIndex = prev % cipherQuestions.length;
+            setCurrentPuzzle(cipherQuestions[nextIndex]);
+            setLogs(logsPrev => [...logsPrev, { time: generateTimestamp(), msg: `LEVEL ${prev + 1} INITIALIZED.`, isWarning: false }]);
+            return prev + 1;
+          });
+          setIsSolved(false);
+          setUserInput('');
+          setShowHint(false);
+          setAttemptsRemaining(3);
+        }, 3000);
+      }
+    } else {
+      setAttemptsRemaining(prev => prev - 1);
+      setLogs(prev => [...prev, 
+        { time, msg: `DECRYPTING HASH: [${cleanInput}]...`, isWarning: false },
+        { time: generateTimestamp(), msg: `INVALID HASH DETECTED. ATTEMPTS REMAINING: ${attemptsRemaining - 1}`, isWarning: true }
+      ]);
+      setUserInput('');
+    }
+  };
+
+  const handleRestartLevel = (e) => {
+    if (e) e.preventDefault();
+    setAttemptsRemaining(3);
+    setIsSolved(false);
+    setUserInput('');
+    setLogs(prev => [...prev, { time: generateTimestamp(), msg: "LEVEL RESTARTED.", isWarning: false }]);
+  };
+
+  const handleResetCore = (e) => {
+    if (e) e.preventDefault();
+    setCipherLevel(1);
+    setCipherHealth(0);
+    setCurrentPuzzle(cipherQuestions[0]);
+    setAttemptsRemaining(3);
+    setArchivesRestored(0);
+    setCipherScore(0);
+    setIsSolved(false);
+    setUserInput('');
+    setShowHint(false);
+    setShowResetConfirm(false);
+    
+    localStorage.removeItem('cipherLevel');
+    localStorage.removeItem('cipherHealth');
+    localStorage.removeItem('currentPuzzle');
+    localStorage.removeItem('attemptsRemaining');
+    localStorage.removeItem('archivesRestored');
+    localStorage.removeItem('cipherScore');
+    localStorage.removeItem('unlockedTuringArchives');
+    
+    setLogs([{ time: generateTimestamp(), msg: "CORE RESET. SYSTEM MEMORY WIPED.", isWarning: true }]);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleExecuteCipher();
+    }
+  };
+
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const getMappedChar = (char, shift) => {
+    const index = alphabet.indexOf(char);
+    if (index === -1) return char;
+    return alphabet[(index + shift) % 26];
+  };
+
+  const alphabetSlice = alphabet.split('').slice(0, 12);
+
   useEffect(() => {
     /* 
     Extracted Scripts from original HTML:
@@ -49,12 +251,64 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState 
 {/*  Left Sidebar: System Status (SideNavBar Shared Hybrid)  */}
 <SystemSidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} gameState={gameState} />
 {/*  Center Panel: Cipher Core  */}
-<section className="flex-1 flex flex-col bg-panel-gray border-2 border-terminal-green overflow-hidden">
+<section className="flex-1 flex flex-col bg-panel-gray border-2 border-terminal-green overflow-hidden relative">
+{showCompletion && (
+  <div id="completion-overlay" className="absolute inset-0 z-50 bg-background/95 flex flex-col items-center justify-center p-8 backdrop-blur-md border-4 border-terminal-green opacity-0">
+    <h1 className="font-headline-lg text-[64px] text-terminal-green mb-4 text-center leading-tight completion-text opacity-0">ENCRYPTION NETWORK RESTORED</h1>
+    <p className="font-code-sm text-terminal-green mb-12 text-center max-w-lg completion-text opacity-0">
+      COMMUNICATION CHANNELS ONLINE
+    </p>
+  </div>
+)}
+{showResetConfirm && (
+  <div className="absolute inset-0 z-50 bg-background/95 flex flex-col items-center justify-center p-8 backdrop-blur-md">
+    <h1 className="font-headline-lg text-[48px] text-solstice-gold mb-4 text-center leading-tight">WARNING: CORE PURGE</h1>
+    <p className="font-code-sm text-solstice-gold mb-12 opacity-80 text-center max-w-lg">
+      ARE YOU SURE YOU WANT TO DUMP ALL PROGRESS? THIS WILL WIPE MEMORY, SCORE, AND RESTORE SETTINGS TO FACTORY DEFAULTS.
+    </p>
+    <div className="flex gap-6 w-full max-w-md">
+      <button 
+        className="flex-1 bg-solstice-gold text-surface font-headline-md py-4 hover:opacity-80 transition-opacity"
+        onClick={handleResetCore}
+      >
+        CONFIRM PURGE
+      </button>
+      <button 
+        className="flex-1 bg-surface border-2 border-terminal-green text-terminal-green font-headline-md py-4 hover:bg-terminal-green hover:text-surface transition-colors"
+        onClick={() => setShowResetConfirm(false)}
+      >
+        CANCEL
+      </button>
+    </div>
+  </div>
+)}
+{attemptsRemaining <= 0 && (
+  <div className="absolute inset-0 z-50 bg-background/95 flex flex-col items-center justify-center p-8 backdrop-blur-md">
+    <h1 className="font-headline-lg text-[64px] text-solstice-gold mb-2 animate-pulse text-center leading-tight">ARCHIVE CORRUPTED</h1>
+    <p className="font-code-sm text-solstice-gold mb-12 opacity-80 text-center max-w-lg">
+      CRITICAL ERROR: MAXIMUM DECRYPTION ATTEMPTS EXCEEDED. DATA STREAM SEVERED.
+    </p>
+    <div className="flex gap-6 w-full max-w-md">
+      <button 
+        className="flex-1 bg-surface border-2 border-terminal-green text-terminal-green font-headline-md py-4 hover:bg-terminal-green hover:text-surface transition-colors"
+        onClick={handleRestartLevel}
+      >
+        RETRY LEVEL
+      </button>
+      <button 
+        className="flex-1 bg-solstice-gold text-surface font-headline-md py-4 hover:opacity-80 transition-opacity"
+        onClick={() => setCurrentScreen('MainHub')}
+      >
+        RETURN TO HUB
+      </button>
+    </div>
+  </div>
+)}
 <header className="border-b-2 border-terminal-green p-3 flex justify-between items-center bg-surface">
-<h2 className="font-headline-md text-headline-md glow-green">CIPHER CORE // MODULE_03</h2>
-<div className="flex items-center gap-2 text-soft-green font-code-sm">
+<h2 className="font-headline-md text-headline-md glow-green truncate">CIPHER CORE // LEVEL_{cipherLevel} // TIER_{currentPuzzle.difficulty}</h2>
+<div className="flex items-center gap-2 text-soft-green font-code-sm shrink-0">
 <span className="w-2 h-2 bg-terminal-green rounded-full animate-ping"></span>
-                    ACTIVE_RECONSTRUCTION: TRUE
+                    {isSolved ? "COMMUNICATION RESTORED" : `ARCHIVE HEALTH: ${cipherHealth}%`}
                 </div>
 </header>
 <div className="flex-1 p-6 flex flex-col gap-8 overflow-y-auto crt-flicker">
@@ -62,38 +316,53 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState 
 <div className="flex flex-col items-center gap-4">
 <div className="text-solstice-gold font-code-sm uppercase tracking-tighter">&gt;&gt;&gt; INTERCEPTED_SIGNAL_STREAM &lt;&lt;&lt;</div>
 <div className="bg-surface border-2 border-terminal-green p-8 w-full text-center">
-<span className="font-headline-lg text-[48px] tracking-[1rem] glow-green block mb-4">KHOOR</span>
-<span className="font-code-sm text-soft-green opacity-50">ENCRYPTION_TYPE: CAESAR_SHIFT_3</span>
+<span className="font-headline-lg text-[48px] tracking-[1rem] glow-green block mb-4">
+  {isSolved ? currentPuzzle.answer : currentPuzzle.encryptedMessage}
+</span>
+<span className="font-code-sm text-soft-green opacity-50">ENCRYPTION_TYPE: {currentPuzzle.type}</span>
 </div>
 </div>
 {/*  Puzzle Interface Bento Grid  */}
 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-{/*  Key Reference Table  */}
-<div className="border-2 border-terminal-green p-4 bg-surface">
-<div className="font-label-caps text-label-caps text-solstice-gold mb-3 border-b border-terminal-green pb-1">CYPHER KEY: SHIFT +N</div>
-<div className="grid grid-cols-6 gap-2 text-center font-code-sm text-terminal-green">
-<div className="border border-terminal-green py-1">A → D</div>
-<div className="border border-terminal-green py-1">B → E</div>
-<div className="border border-terminal-green py-1">C → F</div>
-<div className="border border-terminal-green py-1">D → G</div>
-<div className="border border-terminal-green py-1">E → H</div>
-<div className="border border-terminal-green py-1">F → I</div>
-<div className="border border-terminal-green py-1">G → J</div>
-<div className="border border-terminal-green py-1">H → K</div>
-<div className="border border-terminal-green py-1">I → L</div>
-<div className="border border-terminal-green py-1">J → M</div>
-<div className="border border-terminal-green py-1">K → N</div>
-<div className="border border-terminal-green py-1">L → O</div>
+{/*  Hint / Puzzle Analysis Area  */}
+<div className="border-2 border-terminal-green p-4 bg-surface flex flex-col justify-between">
+<div className="font-label-caps text-label-caps text-solstice-gold mb-3 border-b border-terminal-green pb-1">PUZZLE_ANALYSIS</div>
+<div className="flex-1 flex items-center justify-center font-code-sm text-soft-green text-center p-4">
+  {showHint ? currentPuzzle.hint : "ANALYSIS_PENDING"}
 </div>
-<div className="mt-4 font-code-sm text-soft-green opacity-70 italic text-center">...TABLE_CONTINUES...</div>
+{!showHint && (
+  <button 
+    className="bg-terminal-green text-surface font-headline-md py-2 hover:bg-solstice-gold transition-colors mt-4"
+    onClick={() => setShowHint(true)}
+  >
+    REQUEST_HINT
+  </button>
+)}
 </div>
 {/*  Input Area  */}
 <div className="flex flex-col gap-4">
 <div className="flex flex-col gap-2">
-<label className="font-label-caps text-label-caps text-terminal-green">DECODER_INPUT_PROMPT:</label>
-<input className="cipher-input bg-surface border-2 border-terminal-green p-4 font-headline-md text-solstice-gold placeholder-terminal-green/30 text-center uppercase" placeholder="_ENTER_DECRYPTED_TEXT" type="text"/>
+<div className="flex justify-between items-end">
+  <label className="font-label-caps text-label-caps text-terminal-green">DECODER_INPUT_PROMPT:</label>
+  <span className="font-code-sm text-solstice-gold">ATTEMPTS REMAINING: {attemptsRemaining}</span>
 </div>
-<button className="bg-terminal-green text-surface font-headline-md py-4 hover:bg-solstice-gold transition-colors">EXECUTE_CIPHER_SOLVE</button>
+<input 
+  className="cipher-input bg-surface border-2 border-terminal-green p-4 font-headline-md text-solstice-gold placeholder-terminal-green/30 text-center uppercase disabled:opacity-50" 
+  placeholder="_ENTER_DECRYPTED_TEXT" 
+  type="text"
+  value={userInput}
+  onChange={(e) => setUserInput(e.target.value)}
+  onKeyDown={handleKeyDown}
+  disabled={isSolved}
+/>
+</div>
+<button 
+  className="bg-terminal-green text-surface font-headline-md py-4 hover:bg-solstice-gold transition-colors disabled:opacity-50 disabled:hover:bg-terminal-green"
+  onClick={handleExecuteCipher}
+  disabled={isSolved}
+>
+  {isSolved ? "CIPHER_SOLVED" : "EXECUTE_CIPHER_SOLVE"}
+</button>
 </div>
 </div>
 {/*  Binary to ASCII (Reference)  */}
@@ -114,28 +383,19 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState 
 </div>
 {/*  System Logs (Bottom Pane)  */}
 <footer className="border-t-2 border-terminal-green bg-surface h-24 overflow-y-auto p-2 font-code-sm text-soft-green">
-<div className="flex gap-4">
-<span className="text-terminal-green opacity-40">[14:32:05:22]</span>
-<span>ENCRYPTION KEY SYNCED</span>
-</div>
-<div className="flex gap-4">
-<span className="text-terminal-green opacity-40">[14:32:05:48]</span>
-<span>CIPHER_CORE_HEURISTICS: ONLINE</span>
-</div>
-<div className="flex gap-4">
-<span className="text-terminal-green opacity-40">[14:32:06:12]</span>
-<span className="text-solstice-gold">WARNING: PARTIAL SIGNAL DEGRADATION IN SECTOR 7G</span>
-</div>
-<div className="flex gap-4">
-<span className="text-terminal-green opacity-40">[14:32:06:33]</span>
-<span>HEURISTIC SCAN COMPLETE: READY FOR DECODER INPUT</span>
-</div>
+{logs.map((log, index) => (
+  <div key={index} className="flex gap-4">
+    <span className="text-terminal-green opacity-40">[{log.time}]</span>
+    <span className={log.isWarning ? "text-solstice-gold" : ""}>{log.msg}</span>
+  </div>
+))}
+<div ref={logsEndRef} />
 </footer>
 </section>
 {/*  Right Panel: AI Terminal & Turing Portrait  */}
 <aside className="w-80 flex flex-col gap-4 shrink-0">
 <div className="terminal-border bg-panel-gray flex-1 flex flex-col overflow-hidden">
-<AiTerminal />
+<AiTerminal contextualState={{ module: 'CIPHER', difficulty: currentPuzzle.difficulty, type: currentPuzzle.type }} gameState={gameState} />
 </div>
 {/*  Portrait Fragment (50%)  */}
 <div className="h-64 bg-surface border-2 border-terminal-green relative overflow-hidden flex items-center justify-center">
@@ -148,7 +408,7 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState 
 <div className="flex-1"></div> {/*  Top Left Visible  */}
 <div className="flex-1"></div> {/*  Top Right Visible  */}
 </div>
-<div className="flex-1 bg-background flex items-center justify-center border-t-2 border-terminal-green">
+<div className={`flex-1 bg-background flex items-center justify-center border-t-2 border-terminal-green relative overflow-hidden ${isSolved ? 'opacity-0 transition-opacity duration-1000' : ''}`}>
 <span className="font-headline-md text-xs text-terminal-green animate-pulse">LOCKED: 0x44F2</span>
 </div>
 </div>
@@ -163,8 +423,8 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState 
 <div className="font-headline-lg-mobile text-headline-lg-mobile text-terminal-green">[EST 1954]</div>
 <div className="font-code-sm text-code-sm text-soft-green opacity-80">TURING ARCHIVE RECOVERY PROTOCOL</div>
 <nav className="flex gap-4">
-<a className="font-code-sm text-code-sm text-soft-green opacity-60 hover:text-terminal-green transition-opacity" href="#">REBOOT</a>
-<a className="font-code-sm text-code-sm text-soft-green opacity-60 hover:text-terminal-green transition-opacity" href="#">DUMP</a>
+<a className="font-code-sm text-code-sm text-soft-green opacity-60 hover:text-terminal-green transition-opacity" href="#" onClick={handleRestartLevel}>REBOOT</a>
+<a className="font-code-sm text-code-sm text-soft-green opacity-60 hover:text-terminal-green transition-opacity" href="#" onClick={(e) => { e.preventDefault(); setShowResetConfirm(true); }}>DUMP</a>
 <a className="font-code-sm text-code-sm text-soft-green opacity-60 hover:text-terminal-green transition-opacity" href="#">HELP</a>
 </nav>
 </footer>

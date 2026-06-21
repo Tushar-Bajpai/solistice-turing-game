@@ -52,6 +52,17 @@ export default function AiTerminal({ contextualState, gameState }) {
     if (safeContext.module === 'MEMORY') {
       return `MEMORY MODULE: Expected sequence length is ${safeContext.sequenceLength} bits. Chunk the binary string into blocks of 3 for easier retention.`;
     }
+    if (safeContext.module === 'CIPHER') {
+      if (safeContext.difficulty && safeContext.difficulty.includes('CAESAR')) {
+        const shiftMatch = safeContext.type ? safeContext.type.match(/\d+/) : null;
+        const shift = shiftMatch ? shiftMatch[0] : 'X';
+        return `This message uses a shift of ${shift}.`;
+      }
+      if (safeContext.difficulty && safeContext.difficulty.includes('BINARY')) {
+        return "Convert each 8-bit value into ASCII.";
+      }
+      return "Map numbers to letters.";
+    }
     return LOGIC_HINTS[safeContext.level] || 'No hint available for current state.';
   };
 
