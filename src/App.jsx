@@ -74,6 +74,18 @@ function AppContent() {
           currentScreen={currentScreen} 
         />
       </div>
+
+      {/* Critical Corruption Overlay */}
+      {corruption >= 100 && (
+        <div className="fixed inset-0 z-[100] pointer-events-none flex flex-col items-center justify-start pt-24">
+          <div className="absolute inset-0 bg-warning-red/10 crt-flicker mix-blend-screen" />
+          <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(255,51,51,0.3)] animate-pulse" />
+          
+          <div className="bg-warning-red/90 text-black px-8 py-4 md:px-24 md:py-6 font-headline-lg text-2xl md:text-5xl tracking-[0.2em] md:tracking-[0.5em] text-center border-y-4 border-black crt-flicker relative shadow-[0_0_50px_rgba(255,51,51,0.8)]">
+            CRITICAL CORRUPTION DETECTED
+          </div>
+        </div>
+      )}
     </div>
   );
 }

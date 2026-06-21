@@ -1,7 +1,103 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import SideNav from '../components/SideNav';
+import { useGame } from '../context/GameContext';
+
+const TURING_URL = "url('https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80')";
+
+const ALL_PIECES = [
+  { id: 0, bgPos: "0% 0%" },
+  { id: 1, bgPos: "50% 0%" },
+  { id: 2, bgPos: "100% 0%" },
+  { id: 3, bgPos: "0% 50%" },
+  { id: 4, bgPos: "50% 50%" },
+  { id: 5, bgPos: "100% 50%" },
+  { id: 6, bgPos: "0% 100%" },
+  { id: 7, bgPos: "50% 100%" },
+  { id: 8, bgPos: "100% 100%" },
+];
 
 export default function ReconstructionCore({ setCurrentScreen, currentScreen }) {
+  const { addSystemLog } = useGame();
+  
+  const [grid, setGrid] = useState([
+    ALL_PIECES[0], ALL_PIECES[1], ALL_PIECES[2],
+    ALL_PIECES[3], ALL_PIECES[4], null,
+    null, ALL_PIECES[7], null
+  ]);
+  const [buffer, setBuffer] = useState([ALL_PIECES[5], ALL_PIECES[6], ALL_PIECES[8]]);
+  const [isSolved, setIsSolved] = useState(false);
+  const [draggedId, setDraggedId] = useState(null);
+
+  useEffect(() => {
+    let correctCount = 0;
+    grid.forEach((piece, index) => {
+      if (piece && piece.id === index) correctCount++;
+    });
+    if (correctCount === 9) {
+      if (!isSolved) {
+        setIsSolved(true);
+        addSystemLog("[RESTORE]\nTURING RECONSTRUCTION COMPLETE.\nAWAITING FINAL BOOT.");
+      }
+    } else {
+      setIsSolved(false);
+    }
+  }, [grid, isSolved, addSystemLog]);
+
+  const handleDragStart = (e, pieceId) => {
+    e.dataTransfer.setData('pieceId', pieceId.toString());
+    setDraggedId(pieceId);
+  };
+
+  const handleDropOnGrid = (e, index) => {
+    e.preventDefault();
+    const pieceIdStr = e.dataTransfer.getData('pieceId');
+    if (!pieceIdStr) return;
+    const pieceId = parseInt(pieceIdStr, 10);
+    
+    let piece = buffer.find(p => p.id === pieceId);
+    let sourceIndex = -1;
+    if (!piece) {
+      sourceIndex = grid.findIndex(p => p && p.id === pieceId);
+      if (sourceIndex > -1) piece = grid[sourceIndex];
+    }
+    
+    if (!piece) return;
+
+    if (!grid[index]) {
+      const newGrid = [...grid];
+      newGrid[index] = piece;
+      if (sourceIndex > -1) newGrid[sourceIndex] = null;
+      else setBuffer(buffer.filter(p => p.id !== pieceId));
+      setGrid(newGrid);
+    } else {
+      const targetPiece = grid[index];
+      const newGrid = [...grid];
+      newGrid[index] = piece;
+      if (sourceIndex > -1) newGrid[sourceIndex] = targetPiece;
+      else setBuffer([...buffer.filter(p => p.id !== pieceId), targetPiece]);
+      setGrid(newGrid);
+    }
+    setDraggedId(null);
+  };
+
+  const handleDropOnBuffer = (e) => {
+    e.preventDefault();
+    const pieceIdStr = e.dataTransfer.getData('pieceId');
+    if (!pieceIdStr) return;
+    const pieceId = parseInt(pieceIdStr, 10);
+    
+    if (buffer.some(p => p.id === pieceId)) return;
+    
+    const sourceIndex = grid.findIndex(p => p && p.id === pieceId);
+    if (sourceIndex > -1) {
+      const piece = grid[sourceIndex];
+      const newGrid = [...grid];
+      newGrid[sourceIndex] = null;
+      setGrid(newGrid);
+      setBuffer([...buffer, piece]);
+    }
+    setDraggedId(null);
+  };
   useEffect(() => {
     /* 
     Extracted Scripts from original HTML:
@@ -113,48 +209,48 @@ export default function ReconstructionCore({ setCurrentScreen, currentScreen }) 
 <div className="flex-1 flex flex-col items-center justify-center p-gutter">
 {/*  3x3 Puzzle Grid  */}
 <div className="grid grid-cols-3 gap-2 w-full max-w-md aspect-square pixel-border-gold p-2 bg-black/50 backdrop-blur-sm">
-{/*  Corrected fragments are styled with gold borders  */}
-<div className="grid-cell pixel-border-gold overflow-hidden">
-<div className="w-full h-full bg-cover grayscale sepia hue-rotate-[90deg] brightness-125 contrast-150" data-alt="A pixelated, high-contrast digital reconstruction of Alan Turing's eye area in an emerald green phosphor monochrome style. The image is divided by sharp CRT scanlines, appearing on a vintage computer terminal screen with heavy retro-brutalist digital artifacts and a persistent neon glow." style={{"backgroundImage":"url('https","backgroundPosition":"0% 0%"}}></div>
-</div>
-<div className="grid-cell pixel-border-gold overflow-hidden">
-<div className="w-full h-full bg-cover grayscale sepia hue-rotate-[90deg] brightness-125 contrast-150" data-alt="A central upper segment of a digital portrait reconstruction showing the forehead of Alan Turing. The style is 1950s mainframe computing aesthetic with a green-on-black phosphor palette, heavy digital noise, and horizontal scanlines that give a sense of deep technological archaeology." style={{"backgroundImage":"url('https","backgroundPosition":"50% 0%"}}></div>
-</div>
-<div className="grid-cell pixel-border-gold overflow-hidden">
-<div className="w-full h-full bg-cover grayscale sepia hue-rotate-[90deg] brightness-125 contrast-150" data-alt="The right-side eye area fragment of a pixelated Alan Turing portrait. The visual language uses sharp, jagged pixel edges and glowing terminal green tones against deep shadows. Part of a larger grid system, this segment is illuminated with an intense phosphor bloom typical of old hardware monitors." style={{"backgroundImage":"url('https","backgroundPosition":"100% 0%"}}></div>
-</div>
-{/*  Row 2  */}
-<div className="grid-cell pixel-border-gold overflow-hidden">
-<div className="w-full h-full bg-cover grayscale sepia hue-rotate-[90deg] brightness-125 contrast-150" data-alt="A fragment of a retro-computing portrait showing the side of a man's face in high-contrast neon green. The texture is gritty and pixelated, evoking the feeling of a recovered binary file from a corrupted database. The lighting is harsh and direct, following a brutalist digital aesthetic." style={{"backgroundImage":"url('https","backgroundPosition":"0% 50%"}}></div>
-</div>
-<div className="grid-cell pixel-border-gold overflow-hidden">
-<div className="w-full h-full bg-cover grayscale sepia hue-rotate-[90deg] brightness-125 contrast-150" data-alt="The central nose and cheek area of a digital reconstruction of Alan Turing. Rendered in a monochromatic terminal green with heavy scanlines and blooming phosphor glow. The image feels authoritative and historical, treated with a modern cyberpunk hacker interface overlay." style={{"backgroundImage":"url('https","backgroundPosition":"50% 50%"}}></div>
-</div>
-<div className="grid-cell border-2 border-dashed border-terminal-green/30 bg-terminal-green/5 flex items-center justify-center">
-<span className="text-terminal-green animate-pulse">EMPTY</span>
-</div>
-{/*  Row 3  */}
-<div className="grid-cell border-2 border-dashed border-terminal-green/30 bg-terminal-green/5 flex items-center justify-center">
-<span className="text-terminal-green animate-pulse">EMPTY</span>
-</div>
-<div className="grid-cell pixel-border-gold overflow-hidden">
-<div className="w-full h-full bg-cover grayscale sepia hue-rotate-[90deg] brightness-125 contrast-150" data-alt="The lower chin and suit collar area fragment of the Alan Turing reconstruction. The image is starkly green and black, with visible pixel geometry and a sense of flickering cathode-ray tube light. The style is strictly retro-brutalist, prioritizing structural digital clarity." style={{"backgroundImage":"url('https","backgroundPosition":"50% 100%"}}></div>
-</div>
-<div className="grid-cell border-2 border-dashed border-terminal-green/30 bg-terminal-green/5 flex items-center justify-center">
-<span className="text-terminal-green animate-pulse">EMPTY</span>
-</div>
+  {grid.map((piece, index) => (
+    <div 
+      key={`slot-${index}`} 
+      className={`grid-cell flex items-center justify-center ${piece ? (piece.id === index ? 'pixel-border-gold' : 'border-2 border-warning-red/50') : 'border-2 border-dashed border-terminal-green/30 bg-terminal-green/5'}`}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => handleDropOnGrid(e, index)}
+    >
+      {piece ? (
+        <div 
+          className={`w-full h-full bg-cover grayscale sepia hue-rotate-[90deg] brightness-125 contrast-150 cursor-grab active:cursor-grabbing ${draggedId === piece.id ? 'opacity-50' : 'opacity-100'}`} 
+          style={{ backgroundImage: TURING_URL, backgroundPosition: piece.bgPos }}
+          draggable
+          onDragStart={(e) => handleDragStart(e, piece.id)}
+          onDragEnd={() => setDraggedId(null)}
+        ></div>
+      ) : (
+        <span className="text-terminal-green animate-pulse text-xs">EMPTY</span>
+      )}
+    </div>
+  ))}
 </div>
 {/*  Buffer area for remaining pieces  */}
-<div className="mt-8 flex gap-4 p-4 pixel-border bg-black/20 w-full overflow-x-auto">
-<div className="draggable-piece w-20 h-20 pixel-border cursor-grab hover:bg-terminal-green/20 flex-shrink-0">
-<div className="w-full h-full bg-cover grayscale sepia hue-rotate-[90deg] brightness-125" data-alt="A puzzle fragment showing the ear and jawline of Alan Turing. The piece is glowing in a terminal green phosphor hue with sharp digital edges and CRT scanlines, appearing as a floating interactive element in a sophisticated 1950s-styled hacker interface." style={{"backgroundImage":"url('https","backgroundPosition":"100% 50%"}}></div>
-</div>
-<div className="draggable-piece w-20 h-20 pixel-border cursor-grab hover:bg-terminal-green/20 flex-shrink-0">
-<div className="w-full h-full bg-cover grayscale sepia hue-rotate-[90deg] brightness-125" data-alt="A pixelated corner fragment of a digital portrait showing a suit shoulder in monochromatic green tones. High-contrast, dark background, with glowing green phosphor highlights and a gritty screen texture. Part of a digital archaeology user interface project." style={{"backgroundImage":"url('https","backgroundPosition":"0% 100%"}}></div>
-</div>
-<div className="draggable-piece w-20 h-20 pixel-border cursor-grab hover:bg-terminal-green/20 flex-shrink-0">
-<div className="w-full h-full bg-cover grayscale sepia hue-rotate-[90deg] brightness-125" data-alt="The final puzzle piece of a high-contrast green monochrome reconstruction of Alan Turing. It shows the lower right corner of a portrait with suit details. The visual style is retro-brutalist and digital, featuring a thick pixelated aesthetic and glowing cathode-ray tube artifacts." style={{"backgroundImage":"url('https","backgroundPosition":"100% 100%"}}></div>
-</div>
+<div 
+  className="mt-8 flex gap-4 p-4 pixel-border bg-black/20 w-full overflow-x-auto min-h-[116px]"
+  onDragOver={(e) => e.preventDefault()}
+  onDrop={handleDropOnBuffer}
+>
+  {buffer.length === 0 && <span className="text-terminal-green/30 italic text-sm my-auto w-full text-center">BUFFER EMPTY</span>}
+  {buffer.map((piece) => (
+    <div 
+      key={`buffer-${piece.id}`} 
+      className="draggable-piece w-20 h-20 pixel-border hover:bg-terminal-green/20 flex-shrink-0 cursor-grab active:cursor-grabbing"
+      draggable
+      onDragStart={(e) => handleDragStart(e, piece.id)}
+      onDragEnd={() => setDraggedId(null)}
+    >
+      <div 
+        className={`w-full h-full bg-cover grayscale sepia hue-rotate-[90deg] brightness-125 ${draggedId === piece.id ? 'opacity-50' : 'opacity-100'}`} 
+        style={{ backgroundImage: TURING_URL, backgroundPosition: piece.bgPos }}
+      ></div>
+    </div>
+  ))}
 </div>
 </div>
 <div className="p-2 text-center text-code-sm bg-terminal-green/10 border-t-2 border-terminal-green">
@@ -197,9 +293,15 @@ export default function ReconstructionCore({ setCurrentScreen, currentScreen }) 
 <span className="text-terminal-green">&gt;</span>
 <input className="bg-transparent border-none focus:ring-0 text-terminal-green font-code-sm w-full" placeholder="Enter final command..." type="text"/>
 </div>
-<button className="w-full mt-2 bg-terminal-green text-surface-dim font-bold py-2 hover:bg-solstice-gold transition-colors duration-0">
-                        INITIALIZE_FINAL_BOOT
-                    </button>
+<button 
+  className={`w-full mt-2 font-bold py-2 transition-colors duration-0 ${isSolved ? 'bg-terminal-green text-surface-dim hover:bg-solstice-gold' : 'bg-terminal-green/20 text-terminal-green/50 cursor-not-allowed'}`}
+  disabled={!isSolved}
+  onClick={() => {
+    if (isSolved) setCurrentScreen('RestorationComplete');
+  }}
+>
+  INITIALIZE_FINAL_BOOT
+</button>
 </div>
 </div>
 </aside>

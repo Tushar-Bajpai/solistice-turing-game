@@ -50,7 +50,7 @@ export const GameProvider = ({ children }) => {
       let newCorruption = prev.corruptionLevel;
 
       if (!skipRewards) {
-        newCorruption = moduleName === 'ai' ? 0 : Math.max(0, prev.corruptionLevel - 23);
+        newCorruption = moduleName === 'ai' ? 0 : prev.corruptionLevel;
       } else {
         if (moduleName === 'ai') newCorruption = 0;
       }
@@ -176,8 +176,30 @@ export const GameProvider = ({ children }) => {
     });
   };
 
+  const resetSystem = () => {
+    const resetState = {
+      solsticeProgress: 0,
+      corruptionLevel: 100,
+      completedModules: [],
+      unlockedModules: ["logic"],
+      reconstructionUnlocked: false
+    };
+    setGameState(resetState);
+    setSystemLogs([]);
+    
+    const keysToRemove = [
+      'logicLevel', 'logicCoreHealth', 'unlockedGates',
+      'cipherLevel', 'cipherHealth', 'currentPuzzle', 'attemptsRemaining', 'archivesRestored', 'cipherScore', 'unlockedTuringArchives',
+      'memoryLevel', 'memoryHealth', 'memoryScore', 'memoryLives',
+      'aiLevel', 'aiHealth', 'aiScore'
+    ];
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    localStorage.removeItem('solsticeGameState');
+  };
+
   return (
-    <GameContext.Provider value={{ gameState, setGameState, updateProgress, revokeProgress, updateSolstice, updateCorruption, systemLogs, addSystemLog }}>
+    <GameContext.Provider value={{ gameState, setGameState, updateProgress, revokeProgress, updateSolstice, updateCorruption, systemLogs, addSystemLog, resetSystem }}>
       {children}
     </GameContext.Provider>
   );
