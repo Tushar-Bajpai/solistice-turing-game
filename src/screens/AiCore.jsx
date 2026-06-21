@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import SystemSidebar from '../components/SystemSidebar';
 import AiTerminal from '../components/AiTerminal';
 
-export default function AiCore({ setCurrentScreen, currentScreen, gameState }) {
+export default function AiCore({ setCurrentScreen, currentScreen }) {
   const terminalRef = React.useRef(null);
 
   const handleHelp = (e) => {
@@ -31,7 +31,7 @@ export default function AiCore({ setCurrentScreen, currentScreen, gameState }) {
 </header>
 <main className="flex-grow flex gap-gutter overflow-hidden h-full">
 {/*  Sidebar / SideNavBar  */}
-<SystemSidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} gameState={gameState} />
+<SystemSidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
 {/*  Main Content Canvas  */}
 <section className="flex-grow flex flex-col terminal-border bg-panel-gray overflow-hidden relative">
 {/*  Workspace Header  */}
@@ -101,7 +101,7 @@ export default function AiCore({ setCurrentScreen, currentScreen, gameState }) {
 {/*  Right Panel: Command Center  */}
 <section className="w-80 flex flex-col gap-4 h-full shrink-0">
 <div className="flex-1 terminal-border bg-panel-gray flex flex-col overflow-hidden">
-<AiTerminal ref={terminalRef} contextualState={{ module: 'AI' }} gameState={gameState} />
+<AiTerminal ref={terminalRef} contextualState={{ module: 'AI' }} />
 </div>
 {/*  Portrait Preview Fragment  */}
 <div className="h-48 terminal-border bg-surface p-2 flex flex-col relative shrink-0">

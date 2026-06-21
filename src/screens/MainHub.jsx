@@ -3,6 +3,7 @@ import SystemSidebar from '../components/SystemSidebar';
 import AiTerminal from '../components/AiTerminal';
 import QuizTerminal from '../components/QuizTerminal';
 import { animate } from 'animejs';
+import { useGame } from '../context/GameContext';
 
 export const LOGIC_TIERS = [
   { levelMax: 3, name: 'ALPHA_TIER', brief: 'BASIC LOGIC PATHWAYS', allowed: ['AND', 'OR'] },
@@ -44,18 +45,22 @@ function evaluateGate(gate, a, b) {
   }
 }
 
-export default function MainHub({ setCurrentScreen, currentScreen, gameState, setGameState, addSystemLog, systemLogs, updateProgress }) {
-  const safeGameState = gameState || { 
-    lightRestoration: 0, 
-    corruptionLevel: 92, 
-    logicComplete: false, 
-    logicLevel: 0, 
-    logicCoreHealth: 0, 
-    bonusAttempts: 0,
-    unlockedGates: [] 
-  };
+export default function MainHub({ setCurrentScreen, currentScreen }) {
+  const { gameState, updateProgress, revokeProgress, addSystemLog, systemLogs } = useGame();
 
-  const baseAttempts = 3 + (safeGameState.bonusAttempts || 0);
+  const [logicLevel, setLogicLevel] = useState(() => parseInt(localStorage.getItem('logicLevel') || '0'));
+  const [logicCoreHealth, setLogicCoreHealth] = useState(() => parseInt(localStorage.getItem('logicCoreHealth') || '0'));
+  const [unlockedGates, setUnlockedGates] = useState(() => JSON.parse(localStorage.getItem('unlockedGates') || '[]'));
+  const bonusAttempts = parseInt(localStorage.getItem('solsticeBonusAttempts') || '0');
+
+  useEffect(() => {
+    localStorage.setItem('logicLevel', logicLevel);
+    localStorage.setItem('logicCoreHealth', logicCoreHealth);
+    localStorage.setItem('unlockedGates', JSON.stringify(unlockedGates));
+  }, [logicLevel, logicCoreHealth, unlockedGates]);
+
+  const logicComplete = gameState.completedModules.includes('logic');
+  const baseAttempts = 3 + bonusAttempts;
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedGate, setSelectedGate] = useState(null);
@@ -63,12 +68,6 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
   const [showFailure, setShowFailure] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showQuizTerminal, setShowQuizTerminal] = useState(false);
-
-  useEffect(() => {
-    if (attempts < baseAttempts && attempts === 3) {
-       setAttempts(baseAttempts);
-    }
-  }, [baseAttempts]);
 
   const gateRef = useRef(null);
   const successContainerRef = useRef(null);
@@ -92,7 +91,7 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
   };
 
   const safeSystemLogs = systemLogs || [];
-  const puzzleIndex = Math.min(safeGameState.logicLevel || 0, PUZZLES.length - 1);
+  const puzzleIndex = Math.min(logicLevel, PUZZLES.length - 1);
   const currentPuzzle = PUZZLES[puzzleIndex];
   
   const currentTier = LOGIC_TIERS.find(t => currentPuzzle.level <= t.levelMax) || LOGIC_TIERS[3];
@@ -120,20 +119,10 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
   };
 
   const executeResetCore = () => {
-    if (setGameState) {
-      setGameState(prev => {
-        const wasComplete = prev.modules?.logic || prev.logicComplete;
-        return {
-          ...prev,
-          logicLevel: 0,
-          logicCoreHealth: 0,
-          logicComplete: false,
-          modules: { ...(prev.modules || {}), logic: false },
-          lightRestoration: wasComplete ? Math.max(0, prev.lightRestoration - 25) : prev.lightRestoration,
-          corruptionLevel: wasComplete ? Math.min(92, prev.corruptionLevel + 23) : prev.corruptionLevel
-        };
-      });
-    }
+    setLogicLevel(0);
+    setLogicCoreHealth(0);
+    revokeProgress('logic');
+    
     setAttempts(baseAttempts);
     setSelectedGate(null);
     setShowFailure(false);
@@ -150,7 +139,7 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
   };
 
   const handleGateSelection = (gate) => {
-    if (safeGameState.logicComplete || showSuccess || showFailure) return;
+    if (logicComplete || showSuccess || showFailure) return;
     
     setSelectedGate(gate);
     const result = evaluateGate(gate, currentPuzzle.a, currentPuzzle.b);
@@ -167,8 +156,8 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
         });
       }
 
-      const isNewGate = !(safeGameState.unlockedGates || []).includes(gate);
-      const newUnlockedGates = isNewGate ? [...(safeGameState.unlockedGates || []), gate] : safeGameState.unlockedGates;
+      const isNewGate = !unlockedGates.includes(gate);
+      const newUnlockedGates = isNewGate ? [...unlockedGates, gate] : unlockedGates;
 
       if (addSystemLog) addSystemLog(`[SYS] LEVEL ${currentPuzzle.level} PASSED - GATE ${gate} ACCEPTED`);
 
@@ -178,24 +167,16 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
 
       const isFinalStage = puzzleIndex + 1 >= PUZZLES.length;
 
-      if (setGameState) {
-        setGameState(prev => {
-          let newLevel = prev.logicLevel + 1;
-          let healthIncrease = 10;
-          
-          if (isFinalStage && !prev.logicComplete) {
-            healthIncrease = 100 - prev.logicCoreHealth;
-          }
-
-          return {
-            ...prev,
-            logicLevel: newLevel,
-            logicCoreHealth: Math.min(100, (prev.logicCoreHealth || 0) + healthIncrease),
-            unlockedGates: newUnlockedGates,
-            logicComplete: isFinalStage ? true : prev.logicComplete
-          };
-        });
+      let newLevel = logicLevel + 1;
+      let healthIncrease = 10;
+      
+      if (isFinalStage && !logicComplete) {
+        healthIncrease = 100 - logicCoreHealth;
       }
+
+      setLogicLevel(newLevel);
+      setLogicCoreHealth(Math.min(100, logicCoreHealth + healthIncrease));
+      setUnlockedGates(newUnlockedGates);
 
       setTimeout(() => {
         if (isFinalStage) {
@@ -244,7 +225,7 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
   };
 
   useEffect(() => {
-    if (safeGameState.logicComplete && successContainerRef.current) {
+    if (logicComplete && successContainerRef.current) {
       animate(successContainerRef.current, {
         opacity: [0, 1],
         translateY: [20, 0],
@@ -252,13 +233,13 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
         ease: 'outExpo'
       });
     }
-  }, [safeGameState.logicComplete]);
+  }, [logicComplete]);
 
   return (
     <>
       <div className="crt-overlay"></div>
       <div className="scanline"></div>
-      {showQuizTerminal && <QuizTerminal onClose={() => setShowQuizTerminal(false)} setGameState={setGameState} />}
+      {showQuizTerminal && <QuizTerminal onClose={() => setShowQuizTerminal(false)} />}
       <div className="flex flex-col h-screen p-gutter gap-gutter flicker-layer">
         <header className="w-full flex justify-between items-center h-16 py-unit terminal-border border-b-2 border-terminal-green bg-surface px-gutter shrink-0">
           <div className="font-headline-lg text-headline-lg text-terminal-green uppercase tracking-tighter phosphor-glow">
@@ -273,13 +254,13 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
         </header>
 
         <main className="flex-grow flex gap-gutter overflow-hidden h-full">
-          <SystemSidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} gameState={safeGameState} />
+          <SystemSidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
           
           <section className="flex-grow flex flex-col terminal-border bg-panel-gray overflow-hidden">
             <div className="bg-terminal-green text-surface px-4 py-2 flex justify-between items-center shrink-0">
               <h2 className="font-headline-md text-headline-md text-sm">LOGIC CORE // MODULE_01</h2>
               <span className="font-label-caps text-label-caps">
-                {safeGameState.logicComplete ? 'STATUS: RESTORED' : 'STATUS: CORRUPTED'}
+                {logicComplete ? 'STATUS: RESTORED' : 'STATUS: CORRUPTED'}
               </span>
             </div>
             
@@ -307,7 +288,7 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
               )}
 
               {/* Display Core State */}
-              {!safeGameState.logicComplete && (
+              {!logicComplete && (
                 <div className="w-full max-w-2xl flex justify-between items-start mb-4 border-b border-terminal-green/30 pb-4">
                   <div className="flex flex-col gap-1">
                     <span className="text-terminal-green font-headline-md text-headline-md">{currentTier.name}</span>
@@ -318,7 +299,7 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <span className="text-solstice-gold font-headline-md text-headline-md">LEVEL {currentPuzzle.level}/10</span>
-                    <span className="text-soft-green font-label-caps text-label-caps mb-2">CORE HEALTH: {safeGameState.logicCoreHealth || 0}%</span>
+                    <span className="text-soft-green font-label-caps text-label-caps mb-2">CORE HEALTH: {logicCoreHealth}%</span>
                     <div className="flex gap-2">
                       <button onClick={handleRestartLevel} className="px-2 py-1 text-[10px] font-code-sm border border-terminal-green text-terminal-green hover:bg-terminal-green hover:text-black transition-colors">RESTART LEVEL</button>
                       <button onClick={() => setShowResetConfirm(true)} className="px-2 py-1 text-[10px] font-code-sm border border-warning-red text-warning-red hover:bg-warning-red hover:text-black transition-colors">RESET LOGIC CORE</button>
@@ -327,7 +308,7 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
                 </div>
               )}
 
-              {safeGameState.logicComplete ? (
+              {logicComplete ? (
                 <div ref={successContainerRef} className="w-full max-w-2xl terminal-border p-12 bg-surface-container relative flex flex-col items-center justify-center text-center gap-6">
                   <div className="w-24 h-24 rounded-full border-4 border-solstice-gold flex items-center justify-center animate-[pulse_2s_infinite]">
                     <span className="material-symbols-outlined text-6xl text-solstice-gold">done</span>
@@ -412,7 +393,7 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
           </section>
 
           {/* AI Terminal Context Passed In */}
-          <AiTerminal ref={terminalRef} contextualState={terminalContext} gameState={safeGameState} />
+          <AiTerminal ref={terminalRef} contextualState={terminalContext} />
         </main>
 
         <footer className="h-32 terminal-border bg-surface shrink-0 p-4 font-code-sm text-code-sm flex flex-col gap-1 overflow-hidden relative">

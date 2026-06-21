@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import SystemSidebar from '../components/SystemSidebar';
 import AiTerminal from '../components/AiTerminal';
 import { animate } from 'animejs';
+import { useGame } from '../context/GameContext';
 
 const MEMORY_TIERS = [
   { levelMax: 3, name: 'ALPHA_ARCHIVE', lengthMin: 3, lengthMax: 4 },
@@ -17,29 +18,30 @@ function generateSequence(length) {
   return seq;
 }
 
-export default function MemoryCore({ setCurrentScreen, currentScreen, gameState, setGameState, addSystemLog, systemLogs, updateProgress }) {
-  const safeGameState = gameState || { 
-    lightRestoration: 0, 
-    corruptionLevel: 92, 
-    memoryComplete: false, 
-    memoryLevel: 0, 
-    memoryCoreHealth: 0 
-  };
+export default function MemoryCore({ setCurrentScreen, currentScreen }) {
+  const { gameState, updateProgress, revokeProgress, addSystemLog, systemLogs } = useGame();
   
   const safeSystemLogs = systemLogs || [];
   
+  const [memoryLevel, setMemoryLevel] = useState(() => parseInt(localStorage.getItem('memoryLevel') || '0'));
+  const [memoryCoreHealth, setMemoryCoreHealth] = useState(() => parseInt(localStorage.getItem('memoryCoreHealth') || '0'));
+  const bonusAttempts = parseInt(localStorage.getItem('solsticeBonusAttempts') || '0');
+
+  useEffect(() => {
+    localStorage.setItem('memoryLevel', memoryLevel);
+    localStorage.setItem('memoryCoreHealth', memoryCoreHealth);
+  }, [memoryLevel, memoryCoreHealth]);
+
+  const memoryComplete = gameState.completedModules.includes('memory');
+
   const [phase, setPhase] = useState('INIT'); // INIT, MEMORIZE, RECONSTRUCT, SUCCESS
   const [targetSequence, setTargetSequence] = useState('');
   const [playerInput, setPlayerInput] = useState('');
   
-  const baseAttempts = 3 + (safeGameState.bonusAttempts || 0);
+  const baseAttempts = 3 + bonusAttempts;
   const [attempts, setAttempts] = useState(baseAttempts);
   
   const [showFailure, setShowFailure] = useState(false);
-
-  useEffect(() => {
-    setAttempts(prev => Math.max(prev, baseAttempts));
-  }, [baseAttempts]);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const displayContainerRef = useRef(null);
@@ -58,7 +60,7 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
     terminalRef.current?.executeCommand('HELP');
   };
   
-  const currentLevel = Math.min((safeGameState.memoryLevel || 0) + 1, 10);
+  const currentLevel = Math.min(memoryLevel + 1, 10);
   const currentTier = MEMORY_TIERS.find(t => currentLevel <= t.levelMax) || MEMORY_TIERS[2];
   
   // Base time of 1500ms, decreases by 100ms each level. Level 10 = 600ms!
@@ -82,11 +84,13 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
   };
 
   // Auto-start on mount or level change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (!safeGameState.memoryComplete && phase === 'INIT') {
-      startLevel();
+    if (!memoryComplete && phase === 'INIT') {
+      setTimeout(() => startLevel(), 0);
     }
-  }, [safeGameState.memoryLevel, safeGameState.memoryComplete, phase]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memoryLevel, memoryComplete, phase]);
 
   // Handle Memorize Phase Timer
   useEffect(() => {
@@ -108,7 +112,7 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
   }, [phase, currentDisplayMs]);
 
   const handleInput = (bit) => {
-    if (phase !== 'RECONSTRUCT' || safeGameState.memoryComplete || showFailure) return;
+    if (phase !== 'RECONSTRUCT' || memoryComplete || showFailure) return;
 
     const newInput = playerInput + bit;
     setPlayerInput(newInput);
@@ -138,27 +142,14 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
 
     const isFinalStage = currentLevel >= 10;
 
-    if (setGameState) {
-      setGameState(prev => {
-        let healthIncrease = 10;
-        let lightIncrease = 2.5;
-        let corruptionDecrease = 2.3;
-        
-        if (isFinalStage && !prev.memoryComplete) {
-          healthIncrease = 100 - prev.memoryCoreHealth;
-          // Global reward handled by updateProgress, so we don't apply it locally
-        }
-
-        return {
-          ...prev,
-          memoryLevel: isFinalStage ? prev.memoryLevel : prev.memoryLevel + 1,
-          memoryCoreHealth: Math.min(100, (prev.memoryCoreHealth || 0) + healthIncrease),
-          lightRestoration: isFinalStage ? prev.lightRestoration : Math.min(100, prev.lightRestoration + lightIncrease),
-          corruptionLevel: isFinalStage ? prev.corruptionLevel : Math.max(0, prev.corruptionLevel - corruptionDecrease),
-          memoryComplete: isFinalStage ? true : prev.memoryComplete
-        };
-      });
+    let healthIncrease = 10;
+    
+    if (isFinalStage && !memoryComplete) {
+      healthIncrease = 100 - memoryCoreHealth;
     }
+
+    setMemoryLevel(isFinalStage ? memoryLevel : memoryLevel + 1);
+    setMemoryCoreHealth(Math.min(100, memoryCoreHealth + healthIncrease));
 
     setTimeout(() => {
       if (isFinalStage) {
@@ -220,20 +211,9 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
   };
 
   const executeResetCore = () => {
-    if (setGameState) {
-      setGameState(prev => {
-        const wasComplete = prev.modules?.memory || prev.memoryComplete;
-        return {
-          ...prev,
-          memoryLevel: 0,
-          memoryCoreHealth: 0,
-          memoryComplete: false,
-          modules: { ...(prev.modules || {}), memory: false },
-          lightRestoration: wasComplete ? Math.max(0, prev.lightRestoration - 25) : prev.lightRestoration,
-          corruptionLevel: wasComplete ? Math.min(92, prev.corruptionLevel + 23) : prev.corruptionLevel
-        };
-      });
-    }
+    setMemoryLevel(0);
+    setMemoryCoreHealth(0);
+    revokeProgress('memory');
     setAttempts(baseAttempts);
     setShowFailure(false);
     setShowResetConfirm(false);
@@ -248,7 +228,7 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
   };
 
   useEffect(() => {
-    if (safeGameState.memoryComplete && successContainerRef.current) {
+    if (memoryComplete && successContainerRef.current) {
       animate(successContainerRef.current, {
         opacity: [0, 1],
         translateY: [20, 0],
@@ -256,7 +236,7 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
         ease: 'outExpo'
       });
     }
-  }, [safeGameState.memoryComplete]);
+  }, [memoryComplete]);
 
   return (
     <>
@@ -276,13 +256,13 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
         </header>
 
         <main className="flex-grow flex gap-gutter overflow-hidden h-full">
-          <SystemSidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} gameState={safeGameState} />
+          <SystemSidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
           
           <section className="flex-grow flex flex-col terminal-border bg-panel-gray overflow-hidden">
             <div className="bg-terminal-green text-surface px-4 py-2 flex justify-between items-center shrink-0">
               <h2 className="font-headline-md text-headline-md text-sm">MEMORY CORE // ARCHIVE_RESTORE</h2>
               <span className="font-label-caps text-label-caps">
-                {safeGameState.memoryComplete ? 'STATUS: RESTORED' : 'STATUS: CORRUPTED'}
+                {memoryComplete ? 'STATUS: RESTORED' : 'STATUS: CORRUPTED'}
               </span>
             </div>
             
@@ -309,7 +289,7 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
                 </div>
               )}
 
-              {!safeGameState.memoryComplete && (
+              {!memoryComplete && (
                 <div className="w-full max-w-2xl flex justify-between items-start mb-4 border-b border-terminal-green/30 pb-4">
                   <div className="flex flex-col gap-1">
                     <span className="text-terminal-green font-headline-md text-headline-md">{currentTier.name}</span>
@@ -320,7 +300,7 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <span className="text-solstice-gold font-headline-md text-headline-md">LEVEL {currentLevel}/10</span>
-                    <span className="text-soft-green font-label-caps text-label-caps mb-2">CORE HEALTH: {safeGameState.memoryCoreHealth || 0}%</span>
+                    <span className="text-soft-green font-label-caps text-label-caps mb-2">CORE HEALTH: {memoryCoreHealth}%</span>
                     <div className="flex gap-2">
                       <button onClick={handleRestartLevel} className="px-2 py-1 text-[10px] font-code-sm border border-terminal-green text-terminal-green hover:bg-terminal-green hover:text-black transition-colors">RESTART LEVEL</button>
                       <button onClick={() => setShowResetConfirm(true)} className="px-2 py-1 text-[10px] font-code-sm border border-warning-red text-warning-red hover:bg-warning-red hover:text-black transition-colors">RESET MEMORY CORE</button>
@@ -329,7 +309,7 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
                 </div>
               )}
 
-              {safeGameState.memoryComplete ? (
+              {memoryComplete ? (
                 <div ref={successContainerRef} className="w-full max-w-2xl terminal-border p-12 bg-surface-container relative flex flex-col items-center justify-center text-center gap-6">
                   <div className="w-24 h-24 rounded-full border-4 border-solstice-gold flex items-center justify-center animate-[pulse_2s_infinite]">
                     <span className="material-symbols-outlined text-6xl text-solstice-gold">done</span>
@@ -399,7 +379,7 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
           </section>
 
           {/* AI Terminal Context Passed In */}
-          <AiTerminal ref={terminalRef} contextualState={terminalContext} gameState={safeGameState} />
+          <AiTerminal ref={terminalRef} contextualState={terminalContext} />
         </main>
 
         <footer className="h-32 terminal-border bg-surface shrink-0 p-4 font-code-sm text-code-sm flex flex-col gap-1 overflow-hidden relative">

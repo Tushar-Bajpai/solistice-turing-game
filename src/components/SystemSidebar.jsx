@@ -1,31 +1,31 @@
 import React, { useEffect, useRef } from 'react';
 import { animate } from 'animejs';
+import { useGame } from '../context/GameContext';
 
-export default function SystemSidebar({ currentScreen, setCurrentScreen, gameState }) {
-  const safeGameState = gameState || { lightRestoration: 0, corruptionLevel: 92, logicComplete: false, modules: {} };
-  const modules = safeGameState.modules || {};
+export default function SystemSidebar({ currentScreen, setCurrentScreen }) {
+  const { gameState } = useGame();
+  const completedModules = gameState.completedModules || [];
   
   const corruptionBarRef = useRef(null);
   
   useEffect(() => {
     if (corruptionBarRef.current) {
       animate(corruptionBarRef.current, {
-        width: `${safeGameState.corruptionLevel}%`,
+        width: `${gameState.corruptionLevel}%`,
         duration: 1500,
         ease: 'outElastic(1, .8)'
       });
     }
-  }, [safeGameState.corruptionLevel]);
+  }, [gameState.corruptionLevel]);
 
-  const progress = safeGameState.lightRestoration;
-  const blockCount = 10;
+  const progress = gameState.solsticeProgress;
   const filledBlocks = Math.floor(progress / 10);
 
   const getNavClass = (screenName, moduleKey) => {
     let base = "p-2 flex justify-between items-center cursor-pointer font-label-caps text-label-caps border border-transparent transition-all ";
     
     // Status text
-    let statusText = modules[moduleKey] ? 'COMPLETED' : (currentScreen === screenName ? 'ACTIVE' : 'LOCKED');
+    let statusText = completedModules.includes(moduleKey) ? 'COMPLETED' : (currentScreen === screenName ? 'ACTIVE' : 'LOCKED');
     
     // Active Screen Styling
     if (currentScreen === screenName) {
@@ -34,7 +34,7 @@ export default function SystemSidebar({ currentScreen, setCurrentScreen, gameSta
       base += "text-terminal-green hover:bg-soft-green/20 ";
     }
     
-    if (modules[moduleKey]) {
+    if (completedModules.includes(moduleKey)) {
       // Completed styling
       base += currentScreen === screenName ? "" : "text-solstice-gold opacity-80 ";
     }
@@ -88,7 +88,7 @@ export default function SystemSidebar({ currentScreen, setCurrentScreen, gameSta
           <div>
             <div className="flex justify-between font-label-caps text-label-caps mb-1">
               <span>CORRUPTION_LVL</span>
-              <span className="text-warning-red">{Number(safeGameState.corruptionLevel.toFixed(1))}%</span>
+              <span className="text-warning-red">{Number(gameState.corruptionLevel.toFixed(1))}%</span>
             </div>
             <div className="w-full h-4 terminal-border p-0.5 overflow-hidden">
               <div ref={corruptionBarRef} className="h-full bg-warning-red" style={{ width: '92%' }}></div>

@@ -3,8 +3,10 @@ import { animate, stagger } from 'animejs';
 import SystemSidebar from '../components/SystemSidebar';
 import AiTerminal from '../components/AiTerminal';
 import { cipherQuestions } from '../data/cipherQuestions';
+import { useGame } from '../context/GameContext';
 
-export default function CipherCore({ setCurrentScreen, currentScreen, gameState, setGameState, updateProgress }) {
+export default function CipherCore({ setCurrentScreen, currentScreen }) {
+  const { setGameState, updateProgress, revokeProgress } = useGame();
   const [userInput, setUserInput] = useState('');
   const [isSolved, setIsSolved] = useState(false);
   const [showHint, setShowHint] = useState(false);
@@ -34,16 +36,13 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
   const [cipherLevel, setCipherLevel] = useState(() => initializeState('cipherLevel', 1));
   const [cipherHealth, setCipherHealth] = useState(() => initializeState('cipherHealth', 0));
   const [currentPuzzle, setCurrentPuzzle] = useState(() => initializeState('currentPuzzle', cipherQuestions[0]));
-  const [attemptsRemaining, setAttemptsRemaining] = useState(() => initializeState('attemptsRemaining', 3));
+  const bonusAttempts = parseInt(localStorage.getItem('solsticeBonusAttempts') || '0');
+  const baseAttempts = 3 + bonusAttempts;
+
+  const [attemptsRemaining, setAttemptsRemaining] = useState(() => initializeState('attemptsRemaining', baseAttempts));
   const [archivesRestored, setArchivesRestored] = useState(() => initializeState('archivesRestored', 0));
   const [cipherScore, setCipherScore] = useState(() => initializeState('cipherScore', 0));
   const [unlockedTuringArchives, setUnlockedTuringArchives] = useState(() => initializeState('unlockedTuringArchives', []));
-
-  const baseAttempts = 3 + (gameState?.bonusAttempts || 0);
-
-  useEffect(() => {
-    setAttemptsRemaining(prev => Math.max(prev, baseAttempts));
-  }, [baseAttempts]);
 
   const TURING_FACTS = {
     3: "Alan Turing helped decode the Enigma machine during World War II.",
@@ -137,13 +136,11 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
         ...unlockedLogs
       ]);
       
-      if (setGameState) {
-        setGameState(prev => ({
-          ...prev,
-          lightRestoration: prev.lightRestoration + 2.5,
-          corruptionLevel: Math.max(0, prev.corruptionLevel - 2.3)
-        }));
-      }
+      setGameState(prev => ({
+        ...prev,
+        solsticeProgress: Math.min(100, prev.solsticeProgress + 2.5),
+        corruptionLevel: Math.max(0, prev.corruptionLevel - 2.3)
+      }));
 
       if (isFinal) {
         setShowCompletion(true);
@@ -183,6 +180,7 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
     if (e) e.preventDefault();
     setCipherLevel(1);
     setCipherHealth(0);
+    revokeProgress('cipher');
     setCurrentPuzzle(cipherQuestions[0]);
     setAttemptsRemaining(baseAttempts);
     setArchivesRestored(0);
@@ -208,15 +206,6 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
       handleExecuteCipher();
     }
   };
-
-  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const getMappedChar = (char, shift) => {
-    const index = alphabet.indexOf(char);
-    if (index === -1) return char;
-    return alphabet[(index + shift) % 26];
-  };
-
-  const alphabetSlice = alphabet.split('').slice(0, 12);
 
   useEffect(() => {
     /* 
@@ -264,7 +253,7 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
 {/*  Main Content Container  */}
 <main className="flex-grow flex gap-gutter overflow-hidden h-full">
 {/*  Left Sidebar: System Status (SideNavBar Shared Hybrid)  */}
-<SystemSidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} gameState={gameState} />
+<SystemSidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
 {/*  Center Panel: Cipher Core  */}
 <section className="flex-1 flex flex-col bg-panel-gray border-2 border-terminal-green overflow-hidden relative">
 {showCompletion && (
@@ -443,7 +432,7 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
 {/*  Right Panel: AI Terminal & Turing Portrait  */}
 <aside className="w-80 flex flex-col gap-4 shrink-0">
 <div className="terminal-border bg-panel-gray flex-1 flex flex-col overflow-hidden">
-<AiTerminal ref={terminalRef} contextualState={{ module: 'CIPHER', difficulty: currentPuzzle.difficulty, type: currentPuzzle.type }} gameState={gameState} />
+<AiTerminal ref={terminalRef} contextualState={{ module: 'CIPHER', difficulty: currentPuzzle.difficulty, type: currentPuzzle.type }} />
 </div>
 {/*  Portrait Fragment (50%)  */}
 <div className="h-64 bg-surface border-2 border-terminal-green relative overflow-hidden flex items-center justify-center">

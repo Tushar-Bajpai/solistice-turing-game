@@ -23,7 +23,7 @@ const QUIZ_QUESTIONS = [
   }
 ];
 
-export default function QuizTerminal({ onClose, setGameState }) {
+export default function QuizTerminal({ onClose }) {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [inputValue, setInputValue] = useState('');
   const [logs, setLogs] = useState([
@@ -64,10 +64,8 @@ export default function QuizTerminal({ onClose, setGameState }) {
           setLogs(prev => [...prev, { sender: 'SYSTEM', text: 'ASSESSMENT COMPLETE.' }]);
           
           setTimeout(() => {
-            setGameState(prev => ({
-              ...prev,
-              bonusAttempts: (prev.bonusAttempts || 0) + 1
-            }));
+            const currentBonus = parseInt(localStorage.getItem('solsticeBonusAttempts') || '0');
+            localStorage.setItem('solsticeBonusAttempts', currentBonus + 1);
             setLogs(prev => [...prev, { sender: 'ARCHIVE', text: '=== UPGRADE GRANTED ===\n+1 BONUS ATTEMPT ADDED GLOBALLY' }]);
           }, 1000);
         }

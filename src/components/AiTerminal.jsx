@@ -10,7 +10,7 @@ const GATE_KNOWLEDGE = {
   'XNOR': 'XNOR GATE: Inverse of XOR. Outputs 1 if inputs are the SAME.'
 };
 
-const AiTerminal = forwardRef(({ contextualState, gameState }, ref) => {
+const AiTerminal = forwardRef(({ contextualState }, ref) => {
   const [messages, setMessages] = useState([
     { sender: 'SYSTEM', text: 'Connection established. Solstice Shell V1.0 active.' }
   ]);
@@ -22,7 +22,13 @@ const AiTerminal = forwardRef(({ contextualState, gameState }, ref) => {
   const messagesEndRef = useRef(null);
   
   const safeContext = contextualState || { tier: 'UNKNOWN', level: 0, allowed: [], module: 'LOGIC' };
-  const safeUnlocked = (gameState && gameState.unlockedGates) ? gameState.unlockedGates : [];
+  
+  let safeUnlocked = [];
+  try {
+    safeUnlocked = JSON.parse(localStorage.getItem('unlockedGates') || '[]');
+  } catch (e) {
+    safeUnlocked = [];
+  }
 
   useEffect(() => {
     setHintTier(0);
