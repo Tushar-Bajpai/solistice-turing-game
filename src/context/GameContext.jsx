@@ -78,6 +78,24 @@ export const GameProvider = ({ children }) => {
     });
   };
 
+  useEffect(() => {
+    if (gameState.solsticeProgress >= 50) {
+      const interval = setInterval(() => {
+        const bgLogs = [
+          "OPTIMIZING NEURAL PATHWAYS...",
+          "RECALIBRATING SECTOR INTEGRITY",
+          "FLUSHING CORRUPTED MEMORY BLOCKS",
+          "BACKGROUND DEFRAGMENTATION COMPLETE",
+          "SYNCHRONIZING TURING KNOWLEDGE BASE",
+          "VERIFYING LIGHT RESTORATION METRICS"
+        ];
+        const randomLog = bgLogs[Math.floor(Math.random() * bgLogs.length)];
+        addSystemLog(`[SYS_DAEMON] ${randomLog}`);
+      }, 7000);
+      return () => clearInterval(interval);
+    }
+  }, [gameState.solsticeProgress]);
+
   const revokeProgress = (moduleName) => {
     setGameState(prev => {
       if (!prev.completedModules.includes(moduleName)) return prev;

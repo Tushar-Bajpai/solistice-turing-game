@@ -2,12 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --theme-brightness: 0.6;
+  --theme-crt-opacity: 0.1;
+  --theme-glow-strength: 1px;
+}
+
 @layer base {
   body {
     background-color: #050505;
     color: #00FF66;
     overflow: hidden;
     height: 100vh;
+    filter: brightness(var(--theme-brightness));
   }
 }
 
@@ -36,6 +43,7 @@
     background-size: 100% 4px, 3px 100%;
     z-index: 100;
     pointer-events: none;
+    opacity: var(--theme-crt-opacity);
 }
 
 .scanline, .scanline-overlay {
@@ -56,7 +64,7 @@
 }
 
 .phosphor-glow, .glow-green {
-    text-shadow: 0 0 4px rgba(0, 255, 102, 0.3);
+    text-shadow: 0 0 var(--theme-glow-strength) rgba(0, 255, 102, 0.6);
 }
 
 .solstice-glow, .glow-gold {
@@ -66,10 +74,27 @@
 
 .terminal-border, .pixel-border {
     border: 2px solid #00FF66;
+    transition: border-color 2s ease;
 }
 
 .pixel-border-gold {
     border: 2px solid #FFD54A;
+}
+
+/* Golden terminal accents for 75%+ */
+.theme-tier-3 .terminal-border,
+.theme-tier-4 .terminal-border {
+    border-color: #FFD54A !important;
+}
+
+.theme-tier-3 .phosphor-glow,
+.theme-tier-4 .phosphor-glow {
+    text-shadow: 0 0 calc(var(--theme-glow-strength) + 2px) rgba(255, 213, 74, 0.5) !important;
+}
+
+/* Full restoration theme */
+.theme-tier-4 {
+    background: radial-gradient(circle at center, rgba(255, 213, 74, 0.05) 0%, #050505 80%) !important;
 }
 
 .grid-cell {
