@@ -89,7 +89,7 @@ export default function SystemSidebar({ currentScreen, setCurrentScreen }) {
   const aiNav = getNavClass('AiCore', 'ai');
 
   const handleRecoveryClick = () => {
-    if (progress >= 100) {
+    if (gameState.reconstructionUnlocked) {
       setCurrentScreen('ReconstructionCore');
     }
   };
@@ -191,9 +191,10 @@ export default function SystemSidebar({ currentScreen, setCurrentScreen }) {
         
         <button 
           onClick={handleRecoveryClick}
-          className={`w-full relative z-10 terminal-border bg-panel-gray font-headline-md py-4 text-xs transition-colors ${progress >= 100 ? 'hover:bg-solstice-gold hover:text-black text-solstice-gold border-solstice-gold shadow-[0_0_15px_rgba(255,215,0,0.5)]' : 'hover:bg-terminal-green hover:text-surface text-terminal-green'}`}
+          disabled={!gameState.reconstructionUnlocked}
+          className={`w-full relative z-10 terminal-border bg-panel-gray font-headline-md py-4 text-xs transition-colors ${gameState.reconstructionUnlocked ? 'hover:bg-solstice-gold hover:text-black text-solstice-gold border-solstice-gold shadow-[0_0_15px_rgba(255,215,0,0.5)]' : 'opacity-40 cursor-not-allowed hover:bg-terminal-green hover:text-surface text-terminal-green'}`}
         >
-          {progress >= 100 ? 'RECONSTRUCT TURING' : 'CONTINUE RESTORATION'}
+          {gameState.reconstructionUnlocked ? 'RECONSTRUCT TURING' : 'CONTINUE RESTORATION'}
         </button>
       </section>
     </aside>

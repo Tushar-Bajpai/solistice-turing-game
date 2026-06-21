@@ -8,7 +8,8 @@ const DEFAULT_STATE = {
   solsticeProgress: 0,
   corruptionLevel: 92,
   completedModules: [],
-  unlockedModules: ["logic"]
+  unlockedModules: ["logic"],
+  reconstructionUnlocked: false
 };
 
 export const GameProvider = ({ children }) => {
@@ -21,7 +22,8 @@ export const GameProvider = ({ children }) => {
           solsticeProgress: parsed.solsticeProgress ?? parsed.lightRestoration ?? DEFAULT_STATE.solsticeProgress,
           corruptionLevel: parsed.corruptionLevel ?? DEFAULT_STATE.corruptionLevel,
           completedModules: parsed.completedModules ?? (parsed.modules ? Object.keys(parsed.modules).filter(k => parsed.modules[k]) : DEFAULT_STATE.completedModules),
-          unlockedModules: parsed.unlockedModules ?? DEFAULT_STATE.unlockedModules
+          unlockedModules: parsed.unlockedModules ?? DEFAULT_STATE.unlockedModules,
+          reconstructionUnlocked: parsed.reconstructionUnlocked ?? DEFAULT_STATE.reconstructionUnlocked
         };
       } catch (_) {
         // Fallback to DEFAULT_STATE
@@ -150,6 +152,14 @@ export const GameProvider = ({ children }) => {
       return () => clearInterval(interval);
     }
   }, [gameState.corruptionLevel]);
+
+  useEffect(() => {
+    if (gameState.solsticeProgress >= 100 && !gameState.reconstructionUnlocked) {
+      setGameState(prev => ({ ...prev, reconstructionUnlocked: true }));
+      addSystemLog(`[SUCCESS]\nSOLSTICE ACHIEVED\n\nLIGHT RESTORATION COMPLETE\nSYSTEM STABILIZED`);
+      setTimeout(() => addSystemLog(`[RESTORE]\nRECONSTRUCTION CORE UNLOCKED`), 2000);
+    }
+  }, [gameState.solsticeProgress, gameState.reconstructionUnlocked]);
 
   const revokeProgress = (moduleName) => {
     setGameState(prev => {
