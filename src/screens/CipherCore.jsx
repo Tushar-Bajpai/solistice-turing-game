@@ -10,6 +10,7 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
   const [showHint, setShowHint] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
+  const [showGuide, setShowGuide] = useState(() => localStorage.getItem('hasSeenCipherGuide') === null);
   const logsEndRef = useRef(null);
   const terminalRef = useRef(null);
 
@@ -254,6 +255,7 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
 <div className="font-headline-lg text-headline-lg text-terminal-green uppercase tracking-tighter phosphor-glow">SOLSTICE://TURING</div>
 
 <div className="flex items-center gap-4">
+<button onClick={() => setShowGuide(true)} className="font-code-sm text-terminal-green hover:text-solstice-gold border border-terminal-green/30 px-2 py-1 transition-colors">GUIDE</button>
 <button onClick={handleHelp} className="font-code-sm text-terminal-green hover:text-solstice-gold border border-terminal-green/30 px-2 py-1 transition-colors">HELP</button>
 <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
 <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">settings</span>
@@ -271,6 +273,39 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
     <p className="font-code-sm text-terminal-green mb-12 text-center max-w-lg completion-text opacity-0">
       COMMUNICATION CHANNELS ONLINE
     </p>
+  </div>
+)}
+{showGuide && (
+  <div className="absolute inset-0 z-50 bg-background/95 flex flex-col items-center justify-center p-8 backdrop-blur-md">
+    <h1 className="font-headline-lg text-[48px] text-terminal-green mb-4 text-center leading-tight">CIPHER CORE: GUIDE</h1>
+    <div className="font-code-sm text-soft-green mb-12 max-w-2xl space-y-4 border-2 border-terminal-green p-6 bg-surface shadow-[0_0_20px_rgba(0,255,102,0.15)]">
+      <p><span className="text-terminal-green font-bold">&gt; OBJECTIVE:</span> Decrypt the <span className="text-solstice-gold uppercase">Intercepted Signal Stream</span>.</p>
+      <p><span className="text-terminal-green font-bold">&gt; METHOD:</span> Identify the encryption type (e.g., CAESAR_SHIFT_3 means shift letters forward by 3 in the alphabet).</p>
+      <p><span className="text-terminal-green font-bold">&gt; INPUT:</span> Use the <span className="text-solstice-gold uppercase">Decoder Input</span> to enter the plain text.</p>
+      <p><span className="text-terminal-green font-bold">&gt; RULES:</span> You have limited attempts. Correct decryptions restore the archive health and uncover hidden files.</p>
+      <p className="pt-4 border-t border-terminal-green/30"><span className="text-terminal-green font-bold">Need assistance?</span> The AI Terminal can provide contextual hints and puzzle analysis.</p>
+    </div>
+    <div className="flex gap-6 w-full max-w-md">
+      <button 
+        className="flex-1 bg-terminal-green text-surface font-headline-md py-4 hover:bg-solstice-gold transition-colors"
+        onClick={() => {
+          setShowGuide(false);
+          localStorage.setItem('hasSeenCipherGuide', 'true');
+        }}
+      >
+        START DECRYPTION
+      </button>
+      <button 
+        className="flex-1 bg-surface border-2 border-terminal-green text-terminal-green font-headline-md py-4 hover:bg-terminal-green hover:text-surface transition-colors"
+        onClick={(e) => {
+          setShowGuide(false);
+          localStorage.setItem('hasSeenCipherGuide', 'true');
+          handleHelp(e);
+        }}
+      >
+        ASK AI FOR HELP
+      </button>
+    </div>
   </div>
 )}
 {showResetConfirm && (
