@@ -252,7 +252,7 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
       <div className="scanline"></div>
       {showQuizTerminal && <QuizTerminal onClose={() => setShowQuizTerminal(false)} setGameState={setGameState} />}
       <div className="flex flex-col h-screen p-gutter gap-gutter flicker-layer">
-        <header className="w-full flex justify-between items-center py-unit terminal-border border-b-2 border-terminal-green bg-surface px-gutter shrink-0">
+        <header className="w-full flex justify-between items-center h-16 py-unit terminal-border border-b-2 border-terminal-green bg-surface px-gutter shrink-0">
           <div className="font-headline-lg text-headline-lg text-terminal-green uppercase tracking-tighter phosphor-glow">
               SOLSTICE://TURING
           </div>

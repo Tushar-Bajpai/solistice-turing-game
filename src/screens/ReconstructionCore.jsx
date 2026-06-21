@@ -61,13 +61,13 @@ export default function ReconstructionCore({ setCurrentScreen, currentScreen }) 
 <div className="scanline-overlay"></div>
 <div className="flex flex-col h-screen p-gutter gap-gutter flicker-layer">
 {/*  TOP BAR  */}
-<header className="w-full flex justify-between items-center py-unit terminal-border border-b-2 border-terminal-green bg-surface px-gutter shrink-0">
-<div className="font-headline-lg text-headline-lg text-terminal-green uppercase tracking-widest glow-green">
+<header className="w-full flex justify-between items-center h-16 py-unit terminal-border border-b-2 border-terminal-green bg-surface px-gutter shrink-0">
+<div className="font-headline-lg text-headline-lg text-terminal-green uppercase tracking-tighter phosphor-glow">
             SOLSTICE://TURING
         </div>
-<div className="flex gap-gutter">
-<button className="material-symbols-outlined text-terminal-green hover:bg-terminal-green hover:text-surface-dim p-1">terminal</button>
-<button className="material-symbols-outlined text-terminal-green hover:bg-terminal-green hover:text-surface-dim p-1">settings</button>
+<div className="flex items-center gap-4">
+<span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
+<span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">settings</span>
 </div>
 </header>
 <main className="flex-grow grid grid-cols-12 gap-gutter overflow-hidden h-full">

@@ -250,13 +250,13 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
 <div className="scanline"></div>
 <div className="flex flex-col h-screen p-gutter gap-gutter flicker-layer">
 {/*  Top Navigation Bar (Shared Component)  */}
-<header className="w-full flex justify-between items-center py-unit terminal-border border-b-2 border-terminal-green bg-surface px-gutter shrink-0">
-<div className="font-headline-lg text-headline-lg text-terminal-green uppercase">SOLSTICE://TURING</div>
+<header className="w-full flex justify-between items-center h-16 py-unit terminal-border border-b-2 border-terminal-green bg-surface px-gutter shrink-0">
+<div className="font-headline-lg text-headline-lg text-terminal-green uppercase tracking-tighter phosphor-glow">SOLSTICE://TURING</div>
 
 <div className="flex items-center gap-4">
 <button onClick={handleHelp} className="font-code-sm text-terminal-green hover:text-solstice-gold border border-terminal-green/30 px-2 py-1 transition-colors">HELP</button>
-<span className="material-symbols-outlined text-terminal-green cursor-pointer hover:scale-110 active:scale-95 transition-transform">settings</span>
-<span className="material-symbols-outlined text-terminal-green cursor-pointer hover:scale-110 active:scale-95 transition-transform">terminal</span>
+<span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
+<span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">settings</span>
 </div>
 </header>
 {/*  Main Content Container  */}
