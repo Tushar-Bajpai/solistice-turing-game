@@ -56,7 +56,6 @@ export default function AiCore({ setCurrentScreen, currentScreen }) {
 <div className="flex items-center gap-4">
 <button onClick={handleHelp} className="font-code-sm text-terminal-green hover:text-solstice-gold border border-terminal-green/30 px-2 py-1 transition-colors">HELP</button>
 <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
-<span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">settings</span>
 </div>
 </header>
 <main className="flex-grow flex gap-gutter overflow-hidden h-full">

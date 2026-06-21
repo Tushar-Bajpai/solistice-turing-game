@@ -163,7 +163,6 @@ export default function ReconstructionCore({ setCurrentScreen, currentScreen }) 
         </div>
 <div className="flex items-center gap-4">
 <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
-<span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">settings</span>
 </div>
 </header>
 <main className="flex-grow grid grid-cols-12 gap-gutter overflow-hidden h-full">

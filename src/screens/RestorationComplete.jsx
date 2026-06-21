@@ -191,7 +191,6 @@ void main() {
         </div>
 <div className="flex gap-gutter">
 <button className="material-symbols-outlined text-terminal-green hover:bg-terminal-green hover:text-surface-dim p-1">terminal</button>
-<button className="material-symbols-outlined text-terminal-green hover:bg-terminal-green hover:text-surface-dim p-1">settings</button>
 </div>
 </header>
 <main className="flex-grow grid grid-cols-12 gap-gutter overflow-hidden h-full relative">

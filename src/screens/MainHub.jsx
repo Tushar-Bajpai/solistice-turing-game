@@ -266,7 +266,6 @@ export default function MainHub({ setCurrentScreen, currentScreen }) {
             <button onClick={handleAcademy} className="font-code-sm text-terminal-green hover:text-solstice-gold border border-terminal-green/30 px-2 py-1 transition-colors">TURING_ACADEMY</button>
             <button onClick={handleHelp} className="font-code-sm text-terminal-green hover:text-solstice-gold border border-terminal-green/30 px-2 py-1 transition-colors">HELP</button>
             <span onClick={() => setShowQuizTerminal(true)} className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
-            <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">settings</span>
           </div>
         </header>
 
