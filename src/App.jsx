@@ -25,6 +25,7 @@ function AppContent() {
   
   const ScreenComponent = screens[currentScreen];
   const progress = gameState.solsticeProgress;
+  const corruption = gameState.corruptionLevel;
 
   let themeClass = 'theme-tier-0';
   if (progress >= 100) themeClass = 'theme-tier-4';
@@ -48,6 +49,22 @@ function AppContent() {
        easing: 'easeInOutSine'
     });
   }, [progress]);
+
+  useEffect(() => {
+    if (corruption >= 75) {
+      const interval = setInterval(() => {
+        if (Math.random() > 0.4) {
+          animate('.app-theme-wrapper', {
+            translateX: [0, -4, 4, -2, 2, 0],
+            skewX: [0, -1, 1, 0],
+            duration: 300,
+            easing: 'easeInOutSine'
+          });
+        }
+      }, corruption >= 100 ? 1500 : 3500);
+      return () => clearInterval(interval);
+    }
+  }, [corruption]);
 
   return (
     <div className={`font-body-md text-body-md text-terminal-green uppercase selection:bg-terminal-green selection:text-surface relative w-full h-full min-h-screen bg-[#050505] app-theme-wrapper ${themeClass}`}>

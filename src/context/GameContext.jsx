@@ -96,6 +96,55 @@ export const GameProvider = ({ children }) => {
     }
   }, [gameState.solsticeProgress]);
 
+  useEffect(() => {
+    const corruption = gameState.corruptionLevel;
+    if (corruption >= 25) {
+      let intervalMs = 12000;
+      let logs = [];
+
+      if (corruption >= 100) {
+        intervalMs = 2000;
+        logs = [
+          "CRITICAL: SYSTEM INTEGRITY COMPROMISED", 
+          "FATAL EXCEPTION AT 0x00F32", 
+          "CORRUPTION AT MAXIMUM CAPACITY", 
+          "INITIATING EMERGENCY LOCKDOWN PROTOCOLS"
+        ];
+      } else if (corruption >= 75) {
+        intervalMs = 4000;
+        logs = [
+          "WARNING: HEAVY CORRUPTION DETECTED", 
+          "MEMORY LEAK IN SECTOR 7", 
+          "UNAUTHORIZED OVERRIDE ATTEMPTED", 
+          "DATA PACKET LOSS: 84%"
+        ];
+      } else if (corruption >= 50) {
+        intervalMs = 6000;
+        logs = [
+          "FREQUENT ANOMALIES DETECTED", 
+          "LATENCY SPIKE DETECTED", 
+          "CONNECTION UNSTABLE", 
+          "SYNAPSE MISFIRE LOGGED"
+        ];
+      } else if (corruption >= 25) {
+        intervalMs = 12000;
+        logs = [
+          "MINOR PACKET LOSS", 
+          "SUB-ROUTINE DELAYED", 
+          "SYSTEM TEMPERATURE ELEVATED", 
+          "MINOR WARNING: CACHE MISS"
+        ];
+      }
+
+      const interval = setInterval(() => {
+        const randomLog = logs[Math.floor(Math.random() * logs.length)];
+        addSystemLog(`[SYS_WARN] ${randomLog}`);
+      }, intervalMs);
+
+      return () => clearInterval(interval);
+    }
+  }, [gameState.corruptionLevel]);
+
   const revokeProgress = (moduleName) => {
     setGameState(prev => {
       if (!prev.completedModules.includes(moduleName)) return prev;
