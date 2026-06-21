@@ -212,25 +212,7 @@ npm run preview
 ## 📸 Screenshots
 
 *Main Hub*  
-![Main Hub Placeholder](#)
-
-*Logic Core*  
-![Logic Core Placeholder](#)
-
-*Memory Core*  
-![Memory Core Placeholder](#)
-
-*Cipher Core*  
-![Cipher Core Placeholder](#)
-
-*A.L.A.N. Core*  
-![A.L.A.N. Core Placeholder](#)
-
-*Reconstruction Core*  
-![Reconstruction Core Placeholder](#)
-
-*Victory Screen*  
-![Victory Screen Placeholder](#)
+![Main Hub](public/main_hub.png)
 
 ---
 
