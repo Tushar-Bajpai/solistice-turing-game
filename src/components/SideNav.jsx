@@ -24,7 +24,7 @@ export default function SideNav({ currentScreen, setCurrentScreen }) {
       </div>
       <div onClick={() => setCurrentScreen && setCurrentScreen('AiCore')} className={getNavClass('AiCore')}>
         <span className="material-symbols-outlined">psychology</span>
-        <span>AI_CORE</span>
+        <span>A.L.A.N._CORE</span>
       </div>
     </nav>
   );

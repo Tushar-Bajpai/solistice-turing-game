@@ -219,7 +219,7 @@ export default function SystemSidebar({ currentScreen, setCurrentScreen }) {
             <div onClick={() => aiNav.isUnlocked && setCurrentScreen('AiCore')} className={aiNav.className}>
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined">psychology</span>
-                <span>AI</span>
+                <span>A.L.A.N.</span>
               </div>
               <span className="text-[10px]">{aiNav.statusText}</span>
             </div>

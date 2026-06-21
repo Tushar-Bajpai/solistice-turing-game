@@ -1,25 +1,25 @@
 export const TUTORIAL_SEQUENCES = {
   LOGIC: [
     { sender: 'SYSTEM', text: 'INITIALIZING LOGIC CORE TUTORIAL...' },
-    { sender: 'AI', text: 'Welcome to the Logic Core. Your task is to reconstruct the data path by supplying the correct Logic Gate.' },
-    { sender: 'AI', text: 'Analyze the INPUT A and INPUT B signals. Choose the gate that produces the TARGET OUTPUT.' },
+    { sender: 'A.L.A.N.', text: 'Welcome to the Logic Core. Your task is to reconstruct the data path by supplying the correct Logic Gate.' },
+    { sender: 'A.L.A.N.', text: 'Analyze the INPUT A and INPUT B signals. Choose the gate that produces the TARGET OUTPUT.' },
     { sender: 'SYSTEM', text: 'TUTORIAL COMPLETE. You may type > HELP anytime.' }
   ],
   MEMORY: [
     { sender: 'SYSTEM', text: 'INITIALIZING MEMORY CORE TUTORIAL...' },
-    { sender: 'AI', text: 'Welcome to the Memory Core. This module tests your volatile data retention.' },
-    { sender: 'AI', text: 'A sequence of bits will flash. You must replicate the sequence from memory.' },
+    { sender: 'A.L.A.N.', text: 'Welcome to the Memory Core. This module tests your volatile data retention.' },
+    { sender: 'A.L.A.N.', text: 'A sequence of bits will flash. You must replicate the sequence from memory.' },
     { sender: 'SYSTEM', text: 'TUTORIAL COMPLETE. You may type > HELP anytime.' }
   ],
   CIPHER: [
     { sender: 'SYSTEM', text: 'INITIALIZING CIPHER CORE TUTORIAL...' },
-    { sender: 'AI', text: 'Welcome to the Cipher Core. Encrypted archives must be cracked.' },
-    { sender: 'AI', text: 'Analyze the encrypted signal and the type of encryption to input the decrypted string.' },
+    { sender: 'A.L.A.N.', text: 'Welcome to the Cipher Core. Encrypted archives must be cracked.' },
+    { sender: 'A.L.A.N.', text: 'Analyze the encrypted signal and the type of encryption to input the decrypted string.' },
     { sender: 'SYSTEM', text: 'TUTORIAL COMPLETE. You may type > HELP anytime.' }
   ],
   AI: [
-    { sender: 'SYSTEM', text: 'INITIALIZING AI CORE TUTORIAL...' },
-    { sender: 'AI', text: 'Welcome to the AI Core. This is the final neural alignment module.' },
+    { sender: 'SYSTEM', text: 'INITIALIZING A.L.A.N. CORE TUTORIAL...' },
+    { sender: 'A.L.A.N.', text: 'Welcome to the A.L.A.N. Core. This is the final neural alignment module.' },
     { sender: 'SYSTEM', text: 'TUTORIAL COMPLETE. You may type > HELP anytime.' }
   ]
 };

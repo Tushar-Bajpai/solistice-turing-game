@@ -35,7 +35,7 @@ export default function QuizTerminal({ onClose }) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setLogs(prev => [...prev, { sender: 'AI', text: `QUESTION ${currentIdx + 1}/5: ${QUIZ_QUESTIONS[currentIdx].question}` }]);
+      setLogs(prev => [...prev, { sender: 'A.L.A.N.', text: `QUESTION ${currentIdx + 1}/5: ${QUIZ_QUESTIONS[currentIdx].question}` }]);
     }, 1000);
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -57,7 +57,7 @@ export default function QuizTerminal({ onClose }) {
         if (currentIdx + 1 < QUIZ_QUESTIONS.length) {
           setCurrentIdx(prev => prev + 1);
           setTimeout(() => {
-            setLogs(prev => [...prev, { sender: 'AI', text: `QUESTION ${currentIdx + 2}/5: ${QUIZ_QUESTIONS[currentIdx + 1].question}` }]);
+            setLogs(prev => [...prev, { sender: 'A.L.A.N.', text: `QUESTION ${currentIdx + 2}/5: ${QUIZ_QUESTIONS[currentIdx + 1].question}` }]);
           }, 500);
         } else {
           setCompleted(true);

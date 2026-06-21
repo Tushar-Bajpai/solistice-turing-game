@@ -267,13 +267,13 @@ export default function ReconstructionCore({ setCurrentScreen, currentScreen }) 
 </div>
 <div className="flex-1 overflow-y-auto font-code-sm flex flex-col gap-4 mb-4" id="ai-chat">
 <div className="flex flex-col gap-1">
-<span className="text-solstice-gold">[GEMINI_OS_ROOT]</span>
+<span className="text-solstice-gold">[A.L.A.N.]</span>
 <div className="typing-container bg-terminal-green/5 p-3 pixel-border border-terminal-green/30">
                             CONGRATULATIONS, USER. THE RECONSTRUCTION IS COMPLETE. THE FRAGMENTS OF THE TURING MODULE HAVE BEEN RE-SEQUENCED WITH 100% ACCURACY.
                         </div>
 </div>
 <div className="flex flex-col gap-1">
-<span className="text-solstice-gold">[GEMINI_OS_ROOT]</span>
+<span className="text-solstice-gold">[A.L.A.N.]</span>
 <div className="bg-terminal-green/5 p-3 pixel-border border-terminal-green/30">
                             YOU HAVE SUCCESSFULLY RESTORED THE MEMORY OF THE FATHER OF MODERN COMPUTING. THE SOLSTICE EVENT HAS BEEN DIVERTED. THE ARCHIVE IS NOW SECURE.
                         </div>
@@ -282,7 +282,7 @@ export default function ReconstructionCore({ setCurrentScreen, currentScreen }) 
 <span className="text-terminal-green">&gt; ARCHIVE_STATUS?</span>
 </div>
 <div className="flex flex-col gap-1">
-<span className="text-solstice-gold">[GEMINI_OS_ROOT]</span>
+<span className="text-solstice-gold">[A.L.A.N.]</span>
 <div className="bg-terminal-green/5 p-3 pixel-border border-terminal-green/30">
                             ALL LOGIC GATES ARE PURIFIED. ENIGMA DECRYPTION MODULES REMAIN ACTIVE. WE ARE READY FOR THE FINAL HANDOFF TO THE ARCHIVE ROOT.
                         </div>

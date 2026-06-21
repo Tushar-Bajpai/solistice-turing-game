@@ -108,7 +108,7 @@ const AiTerminal = forwardRef(({ contextualState }, ref) => {
     const idx = Math.min(hintTier, hintArray.length - 1);
     setHintTier(prev => prev + 1);
     if (updateCorruption) updateCorruption(0.5);
-    if (addSystemLog) addSystemLog(`[AI]\nHint Accessed\n\n+0.5% Corruption`);
+    if (addSystemLog) addSystemLog(`[A.L.A.N.]\nHint Accessed\n\n+0.5% Corruption`);
     return `[HINT ${idx + 1}/${hintArray.length}]: ${hintArray[idx]}`;
   };
 
@@ -162,17 +162,17 @@ const AiTerminal = forwardRef(({ contextualState }, ref) => {
       }
 
       if (cmd === 'HINT') {
-        addMessage('AI', getHintText());
+        addMessage('A.L.A.N.', getHintText());
       } else if (cmd.startsWith('EXPLAIN ')) {
         const gate = cmd.replace('EXPLAIN ', '').trim();
         if (GATE_KNOWLEDGE[gate]) {
           if (safeUnlocked.includes(gate)) {
             addMessage('ARCHIVE', GATE_KNOWLEDGE[gate]);
           } else {
-            addMessage('AI', `ERROR: Knowledge of [${gate}] is locked.`);
+            addMessage('A.L.A.N.', `ERROR: Knowledge of [${gate}] is locked.`);
           }
         } else {
-          addMessage('AI', `UNKNOWN GATE: ${gate}`);
+          addMessage('A.L.A.N.', `UNKNOWN GATE: ${gate}`);
         }
       } else {
         addMessage('SYSTEM', `COMMAND NOT RECOGNIZED. TYPE 'HELP' FOR ASSISTANCE.`);
@@ -193,7 +193,7 @@ const AiTerminal = forwardRef(({ contextualState }, ref) => {
       <div className="flex-1 terminal-border bg-panel-gray flex flex-col overflow-hidden">
         <div className="border-b-2 border-terminal-green p-4 flex items-center gap-2 shrink-0 bg-surface">
           <span className="material-symbols-outlined text-terminal-green">psychology</span>
-          <h2 className="font-headline-md text-headline-md text-xs uppercase text-terminal-green">AI TERMINAL</h2>
+          <h2 className="font-headline-md text-headline-md text-xs uppercase text-terminal-green">A.L.A.N. TERMINAL</h2>
         </div>
         
         <div className="flex-grow p-4 font-code-sm text-soft-green overflow-y-auto space-y-4 custom-scrollbar" id="ai-messages">

@@ -280,7 +280,7 @@ export default function CipherCore({ setCurrentScreen, currentScreen }) {
       <p><span className="text-terminal-green font-bold">&gt; METHOD:</span> Identify the encryption type (e.g., CAESAR_SHIFT_3 means shift letters forward by 3 in the alphabet).</p>
       <p><span className="text-terminal-green font-bold">&gt; INPUT:</span> Use the <span className="text-solstice-gold uppercase">Decoder Input</span> to enter the plain text.</p>
       <p><span className="text-terminal-green font-bold">&gt; RULES:</span> You have limited attempts. Correct decryptions restore the archive health and uncover hidden files.</p>
-      <p className="pt-4 border-t border-terminal-green/30"><span className="text-terminal-green font-bold">Need assistance?</span> The AI Terminal can provide contextual hints and puzzle analysis.</p>
+      <p className="pt-4 border-t border-terminal-green/30"><span className="text-terminal-green font-bold">Need assistance?</span> The A.L.A.N. Terminal can provide contextual hints and puzzle analysis.</p>
     </div>
     <div className="flex gap-6 w-full max-w-md">
       <button 
@@ -300,7 +300,7 @@ export default function CipherCore({ setCurrentScreen, currentScreen }) {
           handleHelp(e);
         }}
       >
-        ASK AI FOR HELP
+        ASK A.L.A.N. FOR HELP
       </button>
     </div>
   </div>
@@ -450,7 +450,7 @@ export default function CipherCore({ setCurrentScreen, currentScreen }) {
 <div ref={logsEndRef} />
 </footer>
 </section>
-{/*  Right Panel: AI Terminal & Turing Portrait  */}
+{/*  Right Panel: A.L.A.N. Terminal & Turing Portrait  */}
 <aside className="w-80 flex flex-col gap-4 shrink-0">
 <div className="terminal-border bg-panel-gray flex-1 flex flex-col overflow-hidden">
 <AiTerminal ref={terminalRef} contextualState={{ module: 'CIPHER', difficulty: currentPuzzle.difficulty, type: currentPuzzle.type }} />

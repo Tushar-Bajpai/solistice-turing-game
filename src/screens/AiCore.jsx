@@ -68,7 +68,7 @@ export default function AiCore({ setCurrentScreen, currentScreen }) {
 <div className="flex justify-between items-end border-b-2 border-terminal-green pb-2 z-10 mx-4 mt-4 shrink-0">
 <div className="flex flex-col">
 <span className="text-soft-green font-label-caps text-label-caps">LOCATION: SYSTEM_ROOT / CORE_AI</span>
-<h1 className="font-headline-lg text-headline-lg phosphor-glow">AI CORE // MODULE_04</h1>
+<h1 className="font-headline-lg text-headline-lg phosphor-glow">A.L.A.N. CORE // MODULE_04</h1>
 </div>
 <div className="text-terminal-green font-code-sm text-code-sm border-2 border-terminal-green px-2 py-1 mb-1">
                     TIME_UNTIL_SYNC: 04:22:19
