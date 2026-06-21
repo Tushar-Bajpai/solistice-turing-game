@@ -31,8 +31,15 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
   const [phase, setPhase] = useState('INIT'); // INIT, MEMORIZE, RECONSTRUCT, SUCCESS
   const [targetSequence, setTargetSequence] = useState('');
   const [playerInput, setPlayerInput] = useState('');
-  const [attempts, setAttempts] = useState(3);
+  
+  const baseAttempts = 3 + (safeGameState.bonusAttempts || 0);
+  const [attempts, setAttempts] = useState(baseAttempts);
+  
   const [showFailure, setShowFailure] = useState(false);
+
+  useEffect(() => {
+    setAttempts(prev => Math.max(prev, baseAttempts));
+  }, [baseAttempts]);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const displayContainerRef = useRef(null);
@@ -152,7 +159,7 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
       if (isFinalStage) {
         if (updateProgress) updateProgress('memory', false);
       } else {
-        setAttempts(3);
+        setAttempts(baseAttempts);
         setPhase('INIT');
       }
     }, 1500);
@@ -193,7 +200,7 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
   };
 
   const handleRestartLevel = () => {
-    setAttempts(3);
+    setAttempts(baseAttempts);
     setShowFailure(false);
     if (addSystemLog) addSystemLog(`[SYS] LEVEL ${currentLevel.toString().padStart(2, '0')} RESTARTED`);
     
@@ -221,7 +228,7 @@ export default function MemoryCore({ setCurrentScreen, currentScreen, gameState,
         };
       });
     }
-    setAttempts(3);
+    setAttempts(baseAttempts);
     setShowFailure(false);
     setShowResetConfirm(false);
     setPhase('INIT');

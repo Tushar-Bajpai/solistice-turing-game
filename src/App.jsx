@@ -36,6 +36,7 @@ function App() {
       memoryComplete: false,
       memoryLevel: 0,
       memoryCoreHealth: 0,
+      bonusAttempts: 0,
       modules: { logic: false, memory: false, cipher: false, ai: false }
     };
   });

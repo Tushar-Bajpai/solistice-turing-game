@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import SystemSidebar from '../components/SystemSidebar';
 import AiTerminal from '../components/AiTerminal';
+import QuizTerminal from '../components/QuizTerminal';
 import { animate } from 'animejs';
 
 export const LOGIC_TIERS = [
@@ -44,12 +45,31 @@ function evaluateGate(gate, a, b) {
 }
 
 export default function MainHub({ setCurrentScreen, currentScreen, gameState, setGameState, addSystemLog, systemLogs, updateProgress }) {
+  const safeGameState = gameState || { 
+    lightRestoration: 0, 
+    corruptionLevel: 92, 
+    logicComplete: false, 
+    logicLevel: 0, 
+    logicCoreHealth: 0, 
+    bonusAttempts: 0,
+    unlockedGates: [] 
+  };
+
+  const baseAttempts = 3 + (safeGameState.bonusAttempts || 0);
+
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedGate, setSelectedGate] = useState(null);
-  const [attempts, setAttempts] = useState(3);
+  const [attempts, setAttempts] = useState(baseAttempts);
   const [showFailure, setShowFailure] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-  
+  const [showQuizTerminal, setShowQuizTerminal] = useState(false);
+
+  useEffect(() => {
+    if (attempts < baseAttempts && attempts === 3) {
+       setAttempts(baseAttempts);
+    }
+  }, [baseAttempts]);
+
   const gateRef = useRef(null);
   const successContainerRef = useRef(null);
   const failureOverlayRef = useRef(null);
@@ -66,15 +86,6 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
     terminalRef.current?.executeCommand('ACADEMY');
   };
 
-  const safeGameState = gameState || { 
-    lightRestoration: 0, 
-    corruptionLevel: 92, 
-    logicComplete: false, 
-    logicLevel: 0, 
-    logicCoreHealth: 0, 
-    unlockedGates: [] 
-  };
-  
   const safeSystemLogs = systemLogs || [];
   const puzzleIndex = Math.min(safeGameState.logicLevel || 0, PUZZLES.length - 1);
   const currentPuzzle = PUZZLES[puzzleIndex];
@@ -88,7 +99,7 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
   };
 
   const handleRestartLevel = () => {
-    setAttempts(3);
+    setAttempts(baseAttempts);
     setSelectedGate(null);
     setShowFailure(false);
     if (addSystemLog) addSystemLog(`[SYS] LEVEL ${currentPuzzle.level.toString().padStart(2, '0')} RESTARTED`);
@@ -118,7 +129,7 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
         };
       });
     }
-    setAttempts(3);
+    setAttempts(baseAttempts);
     setSelectedGate(null);
     setShowFailure(false);
     setShowResetConfirm(false);
@@ -183,7 +194,7 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
         if (isFinalStage) {
           if (updateProgress) updateProgress('logic', false); // false to apply the 25% reward globally
         } else {
-          setAttempts(3); // Reset attempts on successful level transition
+          setAttempts(baseAttempts); // Reset attempts on successful level transition
         }
         setShowSuccess(false);
         setSelectedGate(null);
@@ -239,6 +250,7 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
     <>
       <div className="crt-overlay"></div>
       <div className="scanline"></div>
+      {showQuizTerminal && <QuizTerminal onClose={() => setShowQuizTerminal(false)} setGameState={setGameState} />}
       <div className="flex flex-col h-screen p-gutter gap-gutter flicker-layer">
         <header className="w-full flex justify-between items-center py-unit terminal-border border-b-2 border-terminal-green bg-surface px-gutter shrink-0">
           <div className="font-headline-lg text-headline-lg text-terminal-green uppercase tracking-tighter phosphor-glow">
@@ -247,7 +259,7 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
           <div className="flex items-center gap-4">
             <button onClick={handleAcademy} className="font-code-sm text-terminal-green hover:text-solstice-gold border border-terminal-green/30 px-2 py-1 transition-colors">TURING_ACADEMY</button>
             <button onClick={handleHelp} className="font-code-sm text-terminal-green hover:text-solstice-gold border border-terminal-green/30 px-2 py-1 transition-colors">HELP</button>
-            <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
+            <span onClick={() => setShowQuizTerminal(true)} className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">terminal</span>
             <span className="material-symbols-outlined text-terminal-green cursor-pointer hover:bg-terminal-green hover:text-surface p-1">settings</span>
           </div>
         </header>

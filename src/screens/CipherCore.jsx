@@ -38,6 +38,12 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
   const [cipherScore, setCipherScore] = useState(() => initializeState('cipherScore', 0));
   const [unlockedTuringArchives, setUnlockedTuringArchives] = useState(() => initializeState('unlockedTuringArchives', []));
 
+  const baseAttempts = 3 + (gameState?.bonusAttempts || 0);
+
+  useEffect(() => {
+    setAttemptsRemaining(prev => Math.max(prev, baseAttempts));
+  }, [baseAttempts]);
+
   const TURING_FACTS = {
     3: "Alan Turing helped decode the Enigma machine during World War II.",
     6: "He formalized the concepts of algorithm and computation with the Turing machine.",
@@ -151,7 +157,7 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
           setIsSolved(false);
           setUserInput('');
           setShowHint(false);
-          setAttemptsRemaining(3);
+          setAttemptsRemaining(baseAttempts);
         }, 3000);
       }
     } else {
@@ -166,7 +172,7 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
 
   const handleRestartLevel = (e) => {
     if (e) e.preventDefault();
-    setAttemptsRemaining(3);
+    setAttemptsRemaining(baseAttempts);
     setIsSolved(false);
     setUserInput('');
     setLogs(prev => [...prev, { time: generateTimestamp(), msg: "LEVEL RESTARTED.", isWarning: false }]);
@@ -177,7 +183,7 @@ export default function CipherCore({ setCurrentScreen, currentScreen, gameState,
     setCipherLevel(1);
     setCipherHealth(0);
     setCurrentPuzzle(cipherQuestions[0]);
-    setAttemptsRemaining(3);
+    setAttemptsRemaining(baseAttempts);
     setArchivesRestored(0);
     setCipherScore(0);
     setIsSolved(false);
