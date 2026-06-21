@@ -48,7 +48,7 @@ function App() {
   const [systemLogs, setSystemLogs] = useState([]);
 
   const addSystemLog = (log) => {
-    setSystemLogs(prev => [...prev, log]);
+    setSystemLogs(prev => [...prev, { text: log, time: new Date().toLocaleTimeString() }]);
   };
 
   const updateProgress = (moduleName, skipRewards = false) => {

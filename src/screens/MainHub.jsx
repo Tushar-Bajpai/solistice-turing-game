@@ -75,6 +75,11 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
   const failureOverlayRef = useRef(null);
   const resetOverlayRef = useRef(null);
   const terminalRef = useRef(null);
+  const logsEndRef = useRef(null);
+
+  useEffect(() => {
+    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [systemLogs]);
 
   const handleHelp = (e) => {
     e?.preventDefault();
@@ -165,6 +170,8 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
       const isNewGate = !(safeGameState.unlockedGates || []).includes(gate);
       const newUnlockedGates = isNewGate ? [...(safeGameState.unlockedGates || []), gate] : safeGameState.unlockedGates;
 
+      if (addSystemLog) addSystemLog(`[SYS] LEVEL ${currentPuzzle.level} PASSED - GATE ${gate} ACCEPTED`);
+
       if (isNewGate && addSystemLog) {
         addSystemLog(`ARCHIVE UNLOCKED: KNOWLEDGE LOG - ${gate} GATE`);
       }
@@ -214,6 +221,7 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
         });
       }
       
+      if (addSystemLog) addSystemLog(`[SYS] INVALID GATE (${gate}). SIGNAL REJECTED.`);
       setAttempts(prev => {
         const next = prev - 1;
         if (next <= 0) {
@@ -410,12 +418,17 @@ export default function MainHub({ setCurrentScreen, currentScreen, gameState, se
         <footer className="h-32 terminal-border bg-surface shrink-0 p-4 font-code-sm text-code-sm flex flex-col gap-1 overflow-hidden relative">
           <div className="absolute top-0 right-4 px-2 bg-surface text-terminal-green opacity-50 text-[10px] uppercase font-headline-md">System Logs</div>
           <div className="flex flex-col gap-1 overflow-y-auto custom-scrollbar" id="log-container">
-            {safeSystemLogs.map((log, i) => (
-              <div key={i} className="flex gap-4">
-                <span className="text-soft-green opacity-50">[{new Date().toLocaleTimeString()}]</span>
-                <span className={log.includes('UNLOCKED') ? 'text-solstice-gold' : log.includes('[SYS]') ? 'text-warning-red' : 'text-terminal-green'}>{log}</span>
-              </div>
-            ))}
+            {safeSystemLogs.map((logItem, i) => {
+              const text = typeof logItem === 'string' ? logItem : logItem.text;
+              const time = typeof logItem === 'string' ? new Date().toLocaleTimeString() : logItem.time;
+              return (
+                <div key={i} className="flex gap-4">
+                  <span className="text-soft-green opacity-50">[{time}]</span>
+                  <span className={text.includes('UNLOCKED') ? 'text-solstice-gold' : text.includes('[SYS]') ? 'text-warning-red' : 'text-terminal-green'}>{text}</span>
+                </div>
+              );
+            })}
+            <div ref={logsEndRef} />
           </div>
         </footer>
       </div>
