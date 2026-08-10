@@ -128,6 +128,7 @@ graph TD
 Represents Light Restoration.
 Increases as modules are completed.
 Unlocks the Reconstruction Core at 100%.
+(Reconstruction will be updated)
 
 **Corruption Level:**
 Represents system instability.
