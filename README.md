@@ -34,7 +34,7 @@ The challenge is to build a game inspired by:
 
 The Solstice System has suffered catastrophic corruption.
 
-An ancient digital intelligence known as A.L.A.N. (Adaptive Logic Analysis Network) awakens the player and assigns a critical mission:
+An ancient digital intelligence known as A.L.A.N. (Adaptive Logic Analysis Network) awakens the player and assigns a critical mission which is challenging:
 
 1. Restore the Logic Core.
 2. Recover the Memory Core.
