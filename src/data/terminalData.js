@@ -1,6 +1,6 @@
 export const TUTORIAL_SEQUENCES = {
   LOGIC: [
-    { sender: 'SYSTEM', text: 'INITIALIZING LOGIC CORE TUTORIAL..' },
+    { sender: 'SYSTEM', text: 'INITIALIZING LOGIC CORE TUTORIAL...' },
     { sender: 'A.L.A.N.', text: 'Welcome to the Logic Core. Your task is to reconstruct the data path by supplying the correct Logic Gate.' },
     { sender: 'A.L.A.N.', text: 'Analyze the INPUT A and INPUT B signals. Choose the gate that produces the TARGET OUTPUT.' },
     { sender: 'SYSTEM', text: 'TUTORIAL COMPLETE. You may type > HELP anytime.' }
